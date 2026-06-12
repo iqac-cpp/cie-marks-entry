@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V62 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V63 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -408,6 +408,10 @@
       line-height: 1.4;
     }
 
+    .excel-grid.hide-practical .practical-col {
+      display: none;
+    }
+
     .bottom-nav
  {
       position: fixed;
@@ -628,7 +632,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V62 improves mobile cell-to-cell movement and reduces frozen student column size.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V63 refines SEE dropdown movement and hides practical columns based on Paper_Type.</p>
       </div>
     </header>
 
@@ -679,9 +683,9 @@
             <span class="swipe-note">Swipe table →</span>
           </div>
 
-          <div class="excel-help">Excel-like entry: type marks directly in the cell. Use Enter for next cell. Swipe horizontally on mobile.</div>
+          <div class="excel-help">Excel-like entry: type marks directly in the cell. After Attendance, the SEE Grade dropdown will come into view. Swipe horizontally on mobile.</div>
           <div class="marks-wrap">
-            <table class="excel-grid" aria-label="Marks entry table">
+            <table id="marksTable" class="excel-grid" aria-label="Marks entry table">
               <thead>
                 <tr>
                   <th class="sticky-col">S.No</th>
@@ -698,8 +702,8 @@
                   <th>SEE<br><small id="hSee">70</small></th>
                   <th>Total<br><small>100</small></th>
                   <th>Result</th>
-                  <th>Practical<br><small id="hPractical">50</small></th>
-                  <th>Result</th>
+                  <th class="practical-col">Practical<br><small id="hPractical">50</small></th>
+                  <th class="practical-col">Result</th>
                   <th>Remarks</th>
                 </tr>
               </thead>
@@ -787,6 +791,7 @@
       facultyName: document.getElementById('facultyName'),
       marksNotice: document.getElementById('marksNotice'),
       marksBody: document.getElementById('marksBody'),
+      marksTable: document.getElementById('marksTable'),
       marksCard: document.getElementById('marksCard'),
       studentCount: document.getElementById('studentCount'),
       completedCount: document.getElementById('completedCount'),
@@ -925,15 +930,20 @@
 
     function orderedEntryControls() {
       const controls = [];
+      const mode = getMode();
       document.querySelectorAll('#marksBody tr').forEach(row => {
-        ['mid1', 'mid2', 'assignments', 'seminar', 'attendance'].forEach(field => {
-          const item = row.querySelector(`[data-field="${field}"]`);
-          if (item) controls.push(item);
-        });
-        const grade = row.querySelector('[data-field="seeTheory"]');
-        if (grade) controls.push(grade);
-        const practical = row.querySelector('[data-field="practicalMarks"]');
-        if (practical) controls.push(practical);
+        if (mode.hasTheory) {
+          ['mid1', 'mid2', 'assignments', 'seminar', 'attendance'].forEach(field => {
+            const item = row.querySelector(`[data-field="${field}"]`);
+            if (item) controls.push(item);
+          });
+          const grade = row.querySelector('[data-field="seeTheory"]');
+          if (grade) controls.push(grade);
+        }
+        if (mode.hasPractical) {
+          const practical = row.querySelector('[data-field="practicalMarks"]');
+          if (practical) controls.push(practical);
+        }
       });
       return controls;
     }
@@ -946,7 +956,6 @@
 
     function smoothFocusControl(control) {
       if (!control) return;
-      control.focus({ preventScroll: true });
 
       const wrap = control.closest('.marks-wrap');
       if (wrap) {
@@ -962,19 +971,26 @@
       }
 
       control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+
+      setTimeout(() => {
+        control.focus({ preventScroll: true });
+
+        // For SEE dropdown, bring it to focus after scroll. Some mobile browsers
+        // will show the dropdown only after the faculty taps it, but it will be visible.
+        if (control.tagName === 'SELECT' && !isMobileView()) {
+          try { control.click(); } catch (err) {}
+        }
+      }, isMobileView() ? 260 : 80);
     }
 
     function shouldAutoMoveFromInput(input) {
       const max = Number(input.dataset.max || 0);
-      const field = input.dataset.field || '';
       const value = String(input.value || '');
 
       if (!value || input.classList.contains('input-error')) return false;
 
-      // Do not auto-jump from Attendance to SEE dropdown on mobile.
-      if (field === 'attendance' && isMobileView()) return false;
-
-      // One-digit max fields move after one valid digit, but V62 uses a slower delay on mobile.
+      // One-digit max fields move after one valid digit, with a slower delay on mobile.
+      // Flow: Assignment -> Seminar -> Attendance -> SEE Grade dropdown.
       if (max <= 5 && value.length >= 1) return true;
 
       // For two-digit marks, move after two digits or exact maximum.
@@ -997,18 +1013,12 @@
           // Auto movement should be soft on mobile: only one cell ahead.
           const next = nextEntryControl(input);
 
-          // Stop before SEE dropdown on mobile. Faculty should tap the SEE grade manually.
-          if (next && next.tagName === 'SELECT' && isMobileView()) {
-            input.blur();
-            return;
-          }
-
           if (next) {
             smoothFocusControl(next);
           } else {
             input.blur();
           }
-        }, isMobileView() ? 360 : 150);
+        }, isMobileView() ? 430 : 170);
       }
     }
 
@@ -1136,6 +1146,7 @@
 
         renderStudents();
         updateHeaderMax();
+        applyPaperTypeVisibility();
         el.marksCard.style.display = state.isFinalLocked ? 'none' : 'block';
         el.studentCount.textContent = state.students.length;
         updateCompletedCount();
@@ -1167,6 +1178,13 @@
       el.paperModeChip.textContent = c.paperType || 'Fast Entry Mode';
     }
 
+    function applyPaperTypeVisibility() {
+      const mode = getMode();
+      if (el.marksTable) {
+        el.marksTable.classList.toggle('hide-practical', !mode.hasPractical);
+      }
+    }
+
     function renderStudents() {
       el.marksBody.innerHTML = state.students.map((s, index) => {
         const m = state.existingMarks[s.universityRegisterNo] || {};
@@ -1186,8 +1204,8 @@
             <td class="total-cell" data-total="see">0</td>
             <td class="total-cell" data-total="grand">0</td>
             <td data-result="theory">-</td>
-            ${inputCell(index, 'practicalMarks', state.courseSettings.practicalMax || 50, m.practicalMarks)}
-            <td data-result="practical">-</td>
+            ${practicalInputCell(index, state.courseSettings.practicalMax || 50, m.practicalMarks)}
+            <td class="practical-col" data-result="practical">-</td>
             <td><input class="remark-input" data-field="remarks" value="${escapeAttr(m.remarks || '')}" /></td>
           </tr>`;
       }).join('');
@@ -1209,6 +1227,7 @@
         select.addEventListener('change', () => handleGradeChange(select));
       });
 
+      applyPaperTypeVisibility();
       state.students.forEach((s, i) => updateRow(i));
     }
 
@@ -1217,8 +1236,12 @@
       return `<td><input class="mark-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" value="${escapeAttr(value)}"/></td>`;
     }
 
+    function practicalInputCell(row, max, value = '') {
+      return `<td class="practical-col"><input class="mark-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="next" autocomplete="off" data-field="practicalMarks" data-max="${max}" data-row="${row}" value="${escapeAttr(value)}"/></td>`;
+    }
+
     function gradeSelect(value) {
-      return `<select class="grade-select" data-field="seeTheory"><option value="">-</option>${VALID_GRADES.map(g => `<option value="${g}" ${g === value ? 'selected' : ''}>${g}</option>`).join('')}</select>`;
+      return `<select class="grade-select" data-field="seeTheory"><option value="">Select</option>${VALID_GRADES.map(g => `<option value="${g}" ${g === value ? 'selected' : ''}>${g}</option>`).join('')}</select>`;
     }
 
     function getMode() {
@@ -1470,15 +1493,8 @@
 
       const next = nextEntryControl(state.activeInput);
 
-      // Stop before SEE dropdown on mobile. Faculty can tap SEE Grade manually.
-      if (next && next.tagName === 'SELECT' && isMobileView()) {
-        state.activeInput.blur();
-        showNotice(el.marksNotice, 'info', 'Internal marks completed for this row. Tap SEE Grade manually to continue.');
-        return;
-      }
-
       if (next) {
-        setTimeout(() => smoothFocusControl(next), isMobileView() ? 80 : 0);
+        setTimeout(() => smoothFocusControl(next), isMobileView() ? 120 : 0);
       } else {
         state.activeInput.blur();
       }
