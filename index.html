@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V68 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V69 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -235,6 +235,14 @@
       font-size: 12px;
       color: var(--muted);
       font-weight: 700;
+    }
+
+    .progress-panel {
+      margin: 8px 0 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: #f8fbff;
     }
 
     .table-success {
@@ -474,18 +482,6 @@
       box-shadow: inset 0 0 0 2px var(--danger);
     }
 
-    .excel-help {
-      margin: 8px 0 10px;
-      padding: 9px 11px;
-      border-radius: 10px;
-      background: #f7fbff;
-      border: 1px solid #d8e3f3;
-      color: #52627a;
-      font-size: 12px;
-      font-weight: 700;
-      line-height: 1.4;
-    }
-
     .excel-grid.hide-practical .practical-col,
     .excel-grid.hide-theory .theory-col {
       display: none;
@@ -697,12 +693,6 @@
         min-width: 82px;
       }
 
-      .excel-help {
-        font-size: 11px;
-        padding: 7px 9px;
-        margin: 6px 0 8px;
-      }
-
       .student-chip {
         min-height: 32px;
         padding: 6px 10px;
@@ -710,7 +700,8 @@
       }
 
       #marksProgressCard {
-        padding: 10px 12px;
+        margin: 6px 0 8px;
+        padding: 9px 10px;
       }
 
       .progress-title {
@@ -752,7 +743,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V68 replaces summary cards with a compact progress bar and keeps success message visible.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V69 places progress bar above marks table, removes helper text, and prevents duplicate success messages.</p>
       </div>
     </header>
 
@@ -788,7 +779,16 @@
 
         <div id="marksNotice" class="notice info show">Loading dropdown data from Apps Script...</div>
 
-        <div class="card" id="marksProgressCard">
+        
+
+        <div class="card" id="marksCard" style="display:none;">
+          <div id="tableSuccessNotice" class="table-success"></div>
+          <div class="table-tools">
+            <span class="student-chip" id="paperModeChip">Fast Entry Mode</span>
+            <span class="swipe-note">Swipe table →</span>
+          </div>
+
+          <div class="progress-panel" id="marksProgressCard">
           <div class="progress-head">
             <div>
               <div class="progress-title">Entry Progress</div>
@@ -805,14 +805,6 @@
           </div>
         </div>
 
-        <div class="card" id="marksCard" style="display:none;">
-          <div id="tableSuccessNotice" class="table-success"></div>
-          <div class="table-tools">
-            <span class="student-chip" id="paperModeChip">Fast Entry Mode</span>
-            <span class="swipe-note">Swipe table →</span>
-          </div>
-
-          <div class="excel-help">Excel-like entry: type marks directly in the cell. After Practical Marks, the next row Mid-1 will come into view. Swipe horizontally on mobile.</div>
           <div class="marks-wrap">
             <table id="marksTable" class="excel-grid" aria-label="Marks entry table">
               <thead>
@@ -1154,12 +1146,10 @@
     function prepareLoadedMobileView(message) {
       showTableSuccessMessage(message);
 
-      // Keep progress bar visible; hide only the large top form notice on mobile
-      // because the success message is now shown inside the marks table card.
-      if (isMobileView()) {
-        const notice = document.getElementById('marksNotice');
-        if (notice) notice.style.display = 'none';
-      }
+      // Success message is shown inside the marks table card.
+      // Hide the top notice in both desktop and mobile to avoid duplicate messages.
+      const notice = document.getElementById('marksNotice');
+      if (notice) notice.style.display = 'none';
     }
 
     function scrollToFirstStudentAfterLoad() {
@@ -1430,7 +1420,6 @@
           showNotice(el.marksNotice, 'success', `This paper is already final submitted for ${state.students.length} students. Student data is hidden to prevent accidental editing.`);
         } else {
           const successMessage = `${state.students.length} students loaded successfully. Start entering marks from the first student.`;
-          showNotice(el.marksNotice, 'success', successMessage);
           prepareLoadedMobileView(successMessage);
           scrollToFirstStudentAfterLoad();
         }
