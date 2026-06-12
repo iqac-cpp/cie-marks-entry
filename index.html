@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CIE Marks Entry Portal - GDC Cheepurupalli</title>
   <meta name="description" content="Continuous Internal Evaluation Marks Entry Portal - GDC Cheepurupalli" />
+
+  <!-- Directly open the final Apps Script web app from GitHub Pages -->
+  <meta http-equiv="refresh" content="0; url=https://script.google.com/macros/s/AKfycbyBQv6sdtv0JWT1CrlYsk5ZsOYSML_-9EOYcS1RryEfAAviS0poBmHanR96U9Ob7jBP/exec" />
+
   <style>
     :root {
       --blue: #1f5bb5;
       --blue2: #2574d8;
-      --light: #f3f7ff;
-      --border: #d8e2f1;
+      --bg: #eef3fb;
       --text: #10213f;
     }
 
@@ -23,139 +26,96 @@
       padding: 0;
       min-height: 100%;
       font-family: Arial, Helvetica, sans-serif;
-      background: #eef3fb;
+      background: var(--bg);
       color: var(--text);
     }
 
-    .topbar {
-      background: linear-gradient(135deg, var(--blue), var(--blue2));
-      color: white;
-      padding: 18px 22px;
-      box-shadow: 0 4px 18px rgba(20, 72, 150, 0.22);
+    .page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(720px, 100%);
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 34px;
+      box-shadow: 0 10px 34px rgba(15, 35, 68, 0.14);
+      text-align: center;
+      border: 1px solid #d9e4f4;
     }
 
     .badge {
       display: inline-block;
-      background: rgba(255,255,255,0.18);
+      background: linear-gradient(135deg, var(--blue), var(--blue2));
+      color: white;
       border-radius: 999px;
-      padding: 8px 16px;
+      padding: 9px 18px;
       font-weight: 700;
-      letter-spacing: 0.2px;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
     }
 
     h1 {
-      margin: 4px 0 6px;
-      font-size: clamp(24px, 4vw, 42px);
+      margin: 0 0 10px;
+      font-size: clamp(26px, 4vw, 42px);
       line-height: 1.15;
+      color: #0f2b56;
     }
 
-    .subtitle {
-      margin: 0;
-      font-size: clamp(14px, 2vw, 18px);
-      opacity: 0.92;
-    }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      padding: 14px 18px;
-      background: white;
-      border-bottom: 1px solid var(--border);
+    p {
+      margin: 0 0 24px;
+      font-size: 17px;
+      color: #53627a;
+      line-height: 1.6;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 42px;
-      padding: 10px 18px;
+      min-height: 46px;
+      padding: 12px 24px;
       border-radius: 14px;
-      border: 1px solid #cfe0f7;
-      background: var(--light);
-      color: #16498f;
+      background: var(--blue);
+      color: #ffffff;
       font-weight: 700;
       text-decoration: none;
+      border: 1px solid var(--blue);
     }
 
-    .btn.primary {
-      background: var(--blue);
-      color: white;
-      border-color: var(--blue);
-    }
-
-    .frame-wrap {
-      height: calc(100vh - 190px);
-      min-height: 620px;
-      padding: 12px;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: white;
-      box-shadow: 0 8px 26px rgba(15, 35, 68, 0.10);
-    }
-
-    .note {
-      padding: 10px 18px;
+    .small {
+      margin-top: 18px;
       font-size: 13px;
-      color: #52627a;
-      background: #f9fbff;
-      border-bottom: 1px solid var(--border);
+      color: #6b7890;
     }
 
-    @media (max-width: 700px) {
-      .topbar {
-        padding: 16px;
-      }
-
-      .actions {
-        padding: 12px;
+    @media (max-width: 600px) {
+      .card {
+        padding: 24px 18px;
       }
 
       .btn {
         width: 100%;
       }
-
-      .frame-wrap {
-        padding: 8px;
-        height: calc(100vh - 250px);
-        min-height: 560px;
-      }
-
-      iframe {
-        border-radius: 12px;
-      }
     }
   </style>
+
+  <script>
+    window.location.replace("https://script.google.com/macros/s/AKfycbyBQv6sdtv0JWT1CrlYsk5ZsOYSML_-9EOYcS1RryEfAAviS0poBmHanR96U9Ob7jBP/exec");
+  </script>
 </head>
 <body>
-  <header class="topbar">
-    <div class="badge">GDC Cheepurupalli</div>
-    <h1>Continuous Internal Evaluation Marks Entry</h1>
-    <p class="subtitle">Faculty portal for marks entry, CIE status dashboard, and report download.</p>
-  </header>
-
-  <div class="actions">
-    <a class="btn primary" href="https://script.google.com/macros/s/AKfycbyBQv6sdtv0JWT1CrlYsk5ZsOYSML_-9EOYcS1RryEfAAviS0poBmHanR96U9Ob7jBP/exec" target="_blank" rel="noopener">Open Full App</a>
-    <a class="btn" href="https://script.google.com/macros/s/AKfycbyBQv6sdtv0JWT1CrlYsk5ZsOYSML_-9EOYcS1RryEfAAviS0poBmHanR96U9Ob7jBP/exec" target="_blank" rel="noopener">Apps Script Link</a>
-  </div>
-
-  <div class="note">
-    The portal below is loaded from the official Apps Script Web App. If it does not load inside the page, use the “Open Full App” button above.
-  </div>
-
-  <main class="frame-wrap">
-    <iframe
-      src="https://script.google.com/macros/s/AKfycbyBQv6sdtv0JWT1CrlYsk5ZsOYSML_-9EOYcS1RryEfAAviS0poBmHanR96U9Ob7jBP/exec"
-      title="CIE Marks Entry Portal - GDC Cheepurupalli"
-      loading="eager"
-      allow="fullscreen"
-    ></iframe>
+  <main class="page">
+    <section class="card">
+      <div class="badge">GDC Cheepurupalli</div>
+      <h1>Continuous Internal Evaluation Marks Entry</h1>
+      <p>Opening the CIE Marks Entry Portal...</p>
+      <a class="btn" href="https://script.google.com/macros/s/AKfycbyBQv6sdtv0JWT1CrlYsk5ZsOYSML_-9EOYcS1RryEfAAviS0poBmHanR96U9Ob7jBP/exec">Open CIE Portal</a>
+      <div class="small">Use this button only if the portal does not open automatically.</div>
+    </section>
   </main>
 </body>
 </html>
