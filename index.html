@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V64 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V65 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -639,7 +639,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V64 stops SEE dropdown auto-open and fixes Paper_Type based visible columns.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V65 fixes practical-to-next-row Mid-1 mobile scroll movement.</p>
       </div>
     </header>
 
@@ -690,7 +690,7 @@
             <span class="swipe-note">Swipe table →</span>
           </div>
 
-          <div class="excel-help">Excel-like entry: type marks directly in the cell. After Attendance, the SEE Grade dropdown will come into view. Swipe horizontally on mobile.</div>
+          <div class="excel-help">Excel-like entry: type marks directly in the cell. After Practical Marks, the next row Mid-1 will come into view. Swipe horizontally on mobile.</div>
           <div class="marks-wrap">
             <table id="marksTable" class="excel-grid" aria-label="Marks entry table">
               <thead>
@@ -975,15 +975,24 @@
       });
 
       const wrap = control.closest('.marks-wrap');
+      const field = control.dataset ? control.dataset.field : '';
+
       if (wrap) {
         const wrapRect = wrap.getBoundingClientRect();
         const cell = control.closest('td,th');
         const cellRect = cell ? cell.getBoundingClientRect() : control.getBoundingClientRect();
 
-        // Keep target cell just after frozen S.No + Student Name columns.
-        // This prevents jumping to a hidden/covered Mid-1 cell after Practical marks.
-        const stickyOffset = isMobileView() ? 150 : 276;
-        const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
+        let targetLeft;
+
+        if (isMobileView() && field === 'mid1') {
+          // V65: after Practical Marks, the next row should clearly show Mid-1.
+          // Reset horizontal scroll to the first marks area instead of leaving the table at the far-right practical area.
+          targetLeft = 0;
+        } else {
+          // Keep target cell just after frozen S.No + Student Name columns.
+          const stickyOffset = isMobileView() ? 150 : 276;
+          targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
+        }
 
         wrap.scrollTo({
           left: Math.max(0, targetLeft),
@@ -1001,7 +1010,13 @@
         }
 
         control.focus({ preventScroll: true });
-      }, isMobileView() ? 280 : 80);
+
+        // V65 safety: if the target is Mid-1 on mobile, keep the horizontal
+        // position at the first marks area even after focus/keyboard changes.
+        if (wrap && isMobileView() && field === 'mid1') {
+          setTimeout(() => wrap.scrollTo({ left: 0, behavior: 'smooth' }), 80);
+        }
+      }, isMobileView() ? 300 : 80);
     }
 
     function shouldAutoMoveFromInput(input) {
@@ -1039,7 +1054,7 @@
           } else {
             input.blur();
           }
-        }, isMobileView() ? 430 : 170);
+        }, isMobileView() ? 480 : 170);
       }
     }
 
