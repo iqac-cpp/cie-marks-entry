@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V60 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V61 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -275,57 +275,141 @@
     .grade-select { width: 76px; text-align: left; padding-left: 10px; }
     .remark-input { width: 110px; height: 44px; border: 1px solid #cbd9ee; border-radius: 12px; padding: 0 10px; }
 
-    .mark-input:focus, .grade-select:focus, .remark-input:focus {
-      border-color: var(--primary-2);
-      box-shadow: 0 0 0 4px rgba(31, 91, 181, 0.13);
-      background: #fff;
-    }
-
-    .mark-input.input-error {
-      border-color: var(--danger);
-      background: #fff7f7;
-      color: var(--danger);
-      box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.10);
-    }
+    
 
     .total-cell { background: #e8f7ed; color: #0d682d; font-weight: 900; }
     .result-p { color: var(--success); font-weight: 900; }
     .result-f { color: var(--danger); font-weight: 900; }
 
-    .quick-pad {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 10px);
-      z-index: 35;
-      display: none;
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      box-shadow: 0 14px 34px rgba(20, 50, 90, 0.20);
-      padding: 12px;
+    
+    .marks-wrap {
+      border-radius: 10px;
+      border: 1px solid #b7c6dd;
+      background: #fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
     }
 
-    .quick-pad.show { display: block; }
-    .pad-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-    .pad-title { font-size: 13px; font-weight: 900; color: #243a60; }
-    .pad-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+    table.excel-grid {
+      border-collapse: collapse;
+      border-spacing: 0;
+      min-width: 1120px;
+      width: 100%;
+      font-size: 13px;
+      background: #fff;
+    }
 
-    .pad-btn {
-      min-height: 44px;
-      border: 1px solid #d9e5f5;
-      border-radius: 14px;
-      background: #f7faff;
-      color: var(--primary);
+    table.excel-grid th,
+    table.excel-grid td {
+      padding: 4px 5px;
+      border: 1px solid #c7d3e4;
+      vertical-align: middle;
+      text-align: center;
+      background: #fff;
+    }
+
+    table.excel-grid th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: #e8f1ff;
+      color: #173866;
       font-weight: 900;
-      font-size: 16px;
+      font-size: 12px;
+      line-height: 1.2;
     }
 
-    .pad-btn.done { background: var(--success); color: #fff; border-color: var(--success); grid-column: span 2; }
-    .pad-btn.clear { color: var(--danger); }
+    table.excel-grid .sticky-col {
+      position: sticky;
+      left: 0;
+      z-index: 5;
+      min-width: 48px;
+      background: #f7fbff;
+      font-weight: 900;
+    }
 
-    .bottom-nav {
+    table.excel-grid .sticky-name {
+      position: sticky;
+      left: 48px;
+      z-index: 5;
+      min-width: 210px;
+      max-width: 210px;
+      background: #f7fbff;
+      text-align: left;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    table.excel-grid th.sticky-col,
+    table.excel-grid th.sticky-name {
+      z-index: 8;
+      background: #dceaff;
+    }
+
+    table.excel-grid tr:hover td {
+      background: #fbfdff;
+    }
+
+    table.excel-grid tr:hover .sticky-col,
+    table.excel-grid tr:hover .sticky-name {
+      background: #eef6ff;
+    }
+
+    .mark-input,
+    .grade-select,
+    .remark-input {
+      width: 100%;
+      min-width: 54px;
+      height: 36px;
+      border: 0;
+      border-radius: 0;
+      text-align: center;
+      background: transparent;
+      font-weight: 800;
+      font-size: 15px;
+      outline: none;
+      padding: 4px;
+    }
+
+    .grade-select {
+      min-width: 74px;
+      text-align: center;
+      padding: 4px;
+    }
+
+    .remark-input {
+      min-width: 105px;
+      text-align: left;
+      padding: 4px 6px;
+    }
+
+    .mark-input:focus,
+    .grade-select:focus,
+    .remark-input:focus {
+      background: #fff;
+      box-shadow: inset 0 0 0 2px var(--primary-2);
+      border-radius: 2px;
+    }
+
+    .mark-input.input-error {
+      background: #fff1f1;
+      color: var(--danger);
+      box-shadow: inset 0 0 0 2px var(--danger);
+    }
+
+    .excel-help {
+      margin: 8px 0 10px;
+      padding: 9px 11px;
+      border-radius: 10px;
+      background: #f7fbff;
+      border: 1px solid #d8e3f3;
+      color: #52627a;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .bottom-nav
+ {
       position: fixed;
       left: 0;
       right: 0;
@@ -426,7 +510,6 @@
         box-shadow: var(--shadow);
       }
       .nav-btn { flex-direction: row; font-size: 14px; }
-      .quick-pad { width: 560px; left: auto; right: 24px; bottom: 24px; }
     }
 
     @media (max-width: 480px) {
@@ -435,8 +518,6 @@
       .header-card { padding: 14px; }
       .action-row .btn { width: 100%; }
       .sticky-name { min-width: 178px; max-width: 178px; left: 52px; }
-      .pad-grid { grid-template-columns: repeat(4, 1fr); }
-      .pad-btn.done { grid-column: span 2; }
     }
   </style>
 </head>
@@ -446,7 +527,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V60 improves fast marks entry and validation.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V61 removes quick marks pad and uses an Excel-like marks entry grid.</p>
       </div>
     </header>
 
@@ -497,8 +578,9 @@
             <span class="swipe-note">Swipe table →</span>
           </div>
 
+          <div class="excel-help">Excel-like entry: type marks directly in the cell. Use Enter for next cell. Swipe horizontally on mobile.</div>
           <div class="marks-wrap">
-            <table aria-label="Marks entry table">
+            <table class="excel-grid" aria-label="Marks entry table">
               <thead>
                 <tr>
                   <th class="sticky-col">S.No</th>
@@ -577,29 +659,6 @@
         <div id="dashboardList" class="status-list"></div>
       </section>
     </main>
-  </div>
-
-  <div id="quickPad" class="quick-pad" aria-label="Quick numeric pad">
-    <div class="pad-header">
-      <span class="pad-title">Quick Marks Pad</span>
-      <button class="pad-btn clear" type="button" onclick="hideQuickPad()">Close</button>
-    </div>
-    <div class="pad-grid">
-      <button class="pad-btn" type="button" onclick="padValue(0)">0</button>
-      <button class="pad-btn" type="button" onclick="padValue(1)">1</button>
-      <button class="pad-btn" type="button" onclick="padValue(2)">2</button>
-      <button class="pad-btn" type="button" onclick="padValue(3)">3</button>
-      <button class="pad-btn" type="button" onclick="padValue(4)">4</button>
-      <button class="pad-btn" type="button" onclick="padValue(5)">5</button>
-      <button class="pad-btn" type="button" onclick="padValue(10)">10</button>
-      <button class="pad-btn" type="button" onclick="padValue(11)">11</button>
-      <button class="pad-btn" type="button" onclick="padValue(12)">12</button>
-      <button class="pad-btn" type="button" onclick="padValue(14)">14</button>
-      <button class="pad-btn" type="button" onclick="padValue(15)">15</button>
-      <button class="pad-btn" type="button" onclick="padValue(20)">20</button>
-      <button class="pad-btn clear" type="button" onclick="clearActive()">Clear</button>
-      <button class="pad-btn done" type="button" onclick="moveNext()">Done / Next</button>
-    </div>
   </div>
 
   <script>
@@ -824,7 +883,6 @@
 
           // Stop before SEE dropdown on mobile. Faculty should tap the SEE grade manually.
           if (next && next.tagName === 'SELECT' && isMobileView()) {
-            hideQuickPad();
             input.blur();
             return;
           }
@@ -832,10 +890,9 @@
           if (next && next.tagName !== 'SELECT') {
             smoothFocusControl(next);
           } else if (next && next.tagName === 'SELECT') {
-            hideQuickPad();
             smoothFocusControl(next);
           } else {
-            hideQuickPad();
+            if (state.activeInput) state.activeInput.blur();
           }
         }, 150);
       }
@@ -1024,7 +1081,6 @@
       document.querySelectorAll('.mark-input').forEach(input => {
         input.addEventListener('focus', () => {
           state.activeInput = input;
-          showQuickPad(input);
         });
         input.addEventListener('input', () => handleMarkInput(input));
         input.addEventListener('keydown', event => {
@@ -1290,24 +1346,6 @@
       }
     }
 
-    function showQuickPad(input) {
-      state.activeInput = input;
-      document.getElementById('quickPad').classList.add('show');
-    }
-    function hideQuickPad() {
-      document.getElementById('quickPad').classList.remove('show');
-      if (state.activeInput) state.activeInput.blur();
-    }
-    function padValue(value) {
-      if (!state.activeInput) return;
-      state.activeInput.value = value;
-      handleMarkInput(state.activeInput);
-    }
-    function clearActive() {
-      if (!state.activeInput) return;
-      state.activeInput.value = '';
-      updateRow(Number(state.activeInput.closest('tr').dataset.row));
-    }
     function moveNext() {
       if (!state.activeInput) return;
 
@@ -1318,21 +1356,17 @@
 
       const next = nextEntryControl(state.activeInput);
 
-      // Same as stable Apps Script version: stop before SEE dropdown on mobile.
+      // Stop before SEE dropdown on mobile. Faculty can tap SEE Grade manually.
       if (next && next.tagName === 'SELECT' && isMobileView()) {
-        hideQuickPad();
         state.activeInput.blur();
         showNotice(el.marksNotice, 'info', 'Internal marks completed for this row. Tap SEE Grade manually to continue.');
         return;
       }
 
-      if (next && next.tagName !== 'SELECT') {
-        smoothFocusControl(next);
-      } else if (next && next.tagName === 'SELECT') {
-        hideQuickPad();
+      if (next) {
         smoothFocusControl(next);
       } else {
-        hideQuickPad();
+        state.activeInput.blur();
       }
     }
 
