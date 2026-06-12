@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V69 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V70 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -743,7 +743,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V69 places progress bar above marks table, removes helper text, and prevents duplicate success messages.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V70 smoothly scrolls the marks entry area into the middle of the mobile screen after students load.</p>
       </div>
     </header>
 
@@ -1157,15 +1157,18 @@
       const firstStudentNameCell = document.querySelector('#marksBody tr:first-child .sticky-name');
       const firstInput = document.querySelector('#marksBody tr:first-child [data-field="mid1"], #marksBody tr:first-child [data-field="practicalMarks"]');
       const wrap = document.querySelector('.marks-wrap');
+      const target = firstStudentNameCell || el.marksCard;
 
       if (wrap) {
         wrap.scrollTo({ left: 0, behavior: 'smooth' });
       }
 
       setTimeout(() => {
-        const target = firstStudentNameCell || el.marksCard;
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+          const rect = target.getBoundingClientRect();
+          const absoluteTop = window.pageYOffset + rect.top;
+          const desiredTop = Math.max(0, absoluteTop - (window.innerHeight * 0.32));
+          window.scrollTo({ top: desiredTop, behavior: 'smooth' });
         }
       }, 180);
 
@@ -1173,7 +1176,7 @@
         if (firstInput) {
           firstInput.focus({ preventScroll: true });
         }
-      }, 720);
+      }, 900);
     }
 
     function shouldAutoMoveFromInput(input) {
