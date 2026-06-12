@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V63 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V64 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -408,8 +408,15 @@
       line-height: 1.4;
     }
 
-    .excel-grid.hide-practical .practical-col {
+    .excel-grid.hide-practical .practical-col,
+    .excel-grid.hide-theory .theory-col {
       display: none;
+    }
+
+    .grade-select.awaiting-manual-select {
+      background: #fffbe8;
+      box-shadow: inset 0 0 0 2px #d89b00;
+      border-radius: 2px;
     }
 
     .bottom-nav
@@ -632,7 +639,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V63 refines SEE dropdown movement and hides practical columns based on Paper_Type.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V64 stops SEE dropdown auto-open and fixes Paper_Type based visible columns.</p>
       </div>
     </header>
 
@@ -690,18 +697,18 @@
                 <tr>
                   <th class="sticky-col">S.No</th>
                   <th class="sticky-name">Student</th>
-                  <th>Mid 1<br><small id="hMid1">20</small></th>
-                  <th>Mid 2<br><small id="hMid2">15</small></th>
-                  <th>Total<br><small>35</small></th>
-                  <th>Assign<br><small id="hAssign">5</small></th>
-                  <th>Seminar<br><small id="hSeminar">5</small></th>
-                  <th>Attendance<br><small id="hAttendance">5</small></th>
-                  <th>Total IA<br><small>50</small></th>
-                  <th>Scale<br><small id="hScale">30</small></th>
-                  <th>SEE Grade</th>
-                  <th>SEE<br><small id="hSee">70</small></th>
-                  <th>Total<br><small>100</small></th>
-                  <th>Result</th>
+                  <th class="theory-col">Mid 1<br><small id="hMid1">20</small></th>
+                  <th class="theory-col">Mid 2<br><small id="hMid2">15</small></th>
+                  <th class="theory-col">Total<br><small>35</small></th>
+                  <th class="theory-col">Assign<br><small id="hAssign">5</small></th>
+                  <th class="theory-col">Seminar<br><small id="hSeminar">5</small></th>
+                  <th class="theory-col">Attendance<br><small id="hAttendance">5</small></th>
+                  <th class="theory-col">Total IA<br><small>50</small></th>
+                  <th class="theory-col">Scale<br><small id="hScale">30</small></th>
+                  <th class="theory-col">SEE Grade</th>
+                  <th class="theory-col">SEE<br><small id="hSee">70</small></th>
+                  <th class="theory-col">Total<br><small>100</small></th>
+                  <th class="theory-col">Result</th>
                   <th class="practical-col">Practical<br><small id="hPractical">50</small></th>
                   <th class="practical-col">Result</th>
                   <th>Remarks</th>
@@ -948,8 +955,14 @@
       return controls;
     }
 
+    function isActuallyVisible(control) {
+      if (!control) return false;
+      const cell = control.closest('td,th');
+      return !!(cell && cell.offsetParent !== null && control.offsetParent !== null);
+    }
+
     function nextEntryControl(current) {
-      const controls = orderedEntryControls();
+      const controls = orderedEntryControls().filter(isActuallyVisible);
       const index = controls.indexOf(current);
       return index >= 0 ? controls[index + 1] : null;
     }
@@ -957,12 +970,20 @@
     function smoothFocusControl(control) {
       if (!control) return;
 
+      document.querySelectorAll('.awaiting-manual-select').forEach(item => {
+        item.classList.remove('awaiting-manual-select');
+      });
+
       const wrap = control.closest('.marks-wrap');
       if (wrap) {
         const wrapRect = wrap.getBoundingClientRect();
         const cell = control.closest('td,th');
         const cellRect = cell ? cell.getBoundingClientRect() : control.getBoundingClientRect();
-        const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - (wrapRect.width * 0.52) + (cellRect.width / 2);
+
+        // Keep target cell just after frozen S.No + Student Name columns.
+        // This prevents jumping to a hidden/covered Mid-1 cell after Practical marks.
+        const stickyOffset = isMobileView() ? 150 : 276;
+        const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
 
         wrap.scrollTo({
           left: Math.max(0, targetLeft),
@@ -973,14 +994,14 @@
       control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 
       setTimeout(() => {
-        control.focus({ preventScroll: true });
-
-        // For SEE dropdown, bring it to focus after scroll. Some mobile browsers
-        // will show the dropdown only after the faculty taps it, but it will be visible.
-        if (control.tagName === 'SELECT' && !isMobileView()) {
-          try { control.click(); } catch (err) {}
+        if (control.tagName === 'SELECT' && isMobileView()) {
+          // Do not focus/click mobile dropdown. Just stop at it and highlight.
+          control.classList.add('awaiting-manual-select');
+          return;
         }
-      }, isMobileView() ? 260 : 80);
+
+        control.focus({ preventScroll: true });
+      }, isMobileView() ? 280 : 80);
     }
 
     function shouldAutoMoveFromInput(input) {
@@ -1023,6 +1044,7 @@
     }
 
     function handleGradeChange(select) {
+      select.classList.remove('awaiting-manual-select');
       const rowIndex = Number(select.closest('tr').dataset.row);
       updateRow(rowIndex);
 
@@ -1031,7 +1053,7 @@
       if (mode.hasPractical) {
         const practical = select.closest('tr').querySelector('[data-field="practicalMarks"]');
         if (practical && isMobileView()) {
-          setTimeout(() => smoothFocusControl(practical), 120);
+          setTimeout(() => smoothFocusControl(practical), 160);
         }
       }
     }
@@ -1182,6 +1204,7 @@
       const mode = getMode();
       if (el.marksTable) {
         el.marksTable.classList.toggle('hide-practical', !mode.hasPractical);
+        el.marksTable.classList.toggle('hide-theory', !mode.hasTheory);
       }
     }
 
@@ -1192,18 +1215,18 @@
           <tr data-row="${index}">
             <td class="sticky-col">${index + 1}</td>
             <td class="sticky-name">${escapeHtml(s.studentName)}<span class="reg">${escapeHtml(s.studentAdmnNo)} · ${escapeHtml(s.universityRegisterNo)}</span></td>
-            ${inputCell(index, 'mid1', state.courseSettings.maxMid1 || 20, m.mid1)}
-            ${inputCell(index, 'mid2', state.courseSettings.maxMid2 || 15, m.mid2)}
-            <td class="total-cell" data-total="midTotal">0</td>
-            ${inputCell(index, 'assignments', state.courseSettings.maxAssignment || 5, m.assignments)}
-            ${inputCell(index, 'seminar', state.courseSettings.maxSeminar || 5, m.seminar)}
-            ${inputCell(index, 'attendance', state.courseSettings.maxAttendance || 5, m.attendance)}
-            <td class="total-cell" data-total="internalTotal">0</td>
-            <td class="total-cell" data-total="scale">0</td>
-            <td>${gradeSelect(m.seeTheory || '')}</td>
-            <td class="total-cell" data-total="see">0</td>
-            <td class="total-cell" data-total="grand">0</td>
-            <td data-result="theory">-</td>
+            ${inputCell(index, 'mid1', state.courseSettings.maxMid1 || 20, m.mid1, 'theory-col')}
+            ${inputCell(index, 'mid2', state.courseSettings.maxMid2 || 15, m.mid2, 'theory-col')}
+            <td class="total-cell theory-col" data-total="midTotal">0</td>
+            ${inputCell(index, 'assignments', state.courseSettings.maxAssignment || 5, m.assignments, 'theory-col')}
+            ${inputCell(index, 'seminar', state.courseSettings.maxSeminar || 5, m.seminar, 'theory-col')}
+            ${inputCell(index, 'attendance', state.courseSettings.maxAttendance || 5, m.attendance, 'theory-col')}
+            <td class="total-cell theory-col" data-total="internalTotal">0</td>
+            <td class="total-cell theory-col" data-total="scale">0</td>
+            <td class="theory-col">${gradeSelect(m.seeTheory || '')}</td>
+            <td class="total-cell theory-col" data-total="see">0</td>
+            <td class="total-cell theory-col" data-total="grand">0</td>
+            <td class="theory-col" data-result="theory">-</td>
             ${practicalInputCell(index, state.courseSettings.practicalMax || 50, m.practicalMarks)}
             <td class="practical-col" data-result="practical">-</td>
             <td><input class="remark-input" data-field="remarks" value="${escapeAttr(m.remarks || '')}" /></td>
@@ -1231,9 +1254,9 @@
       state.students.forEach((s, i) => updateRow(i));
     }
 
-    function inputCell(row, field, max, value = '') {
+    function inputCell(row, field, max, value = '', cellClass = '') {
       const hint = field === 'attendance' ? 'done' : 'next';
-      return `<td><input class="mark-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" value="${escapeAttr(value)}"/></td>`;
+      return `<td class="${cellClass}"><input class="mark-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" value="${escapeAttr(value)}"/></td>`;
     }
 
     function practicalInputCell(row, max, value = '') {
@@ -1303,7 +1326,7 @@
       const rows = [...document.querySelectorAll('#marksBody tr')];
       let completed = 0;
       rows.forEach(row => {
-        const internalOk = ['mid1','mid2','assignments','seminar','attendance'].every(f => {
+        const internalOk = !mode.hasTheory || ['mid1','mid2','assignments','seminar','attendance'].every(f => {
           const item = row.querySelector(`[data-field="${f}"]`);
           return item && item.value !== '' && !item.classList.contains('input-error');
         });
@@ -1372,10 +1395,12 @@
       for (let i = 0; i < state.students.length; i++) {
         const row = document.querySelector(`tr[data-row="${i}"]`);
         const reg = state.students[i].universityRegisterNo;
-        for (const f of ['mid1','mid2','assignments','seminar','attendance']) {
-          const item = row.querySelector(`[data-field="${f}"]`);
-          if (!item || item.value === '') throw new Error('Please complete internal marks for ' + reg);
-          if (!validateMarkInput(item, false)) throw new Error(`${fieldLabel(f)} cannot be more than ${item.dataset.max} for ${reg}`);
+        if (mode.hasTheory) {
+          for (const f of ['mid1','mid2','assignments','seminar','attendance']) {
+            const item = row.querySelector(`[data-field="${f}"]`);
+            if (!item || item.value === '') throw new Error('Please complete internal marks for ' + reg);
+            if (!validateMarkInput(item, false)) throw new Error(`${fieldLabel(f)} cannot be more than ${item.dataset.max} for ${reg}`);
+          }
         }
         if (status === 'Final Submitted') {
           if (mode.hasTheory && !row.querySelector('[data-field="seeTheory"]').value) throw new Error('Please select SEE grade for ' + reg);
