@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V61 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V62 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -359,7 +359,7 @@
     .remark-input {
       width: 100%;
       min-width: 54px;
-      height: 36px;
+      height: 34px;
       border: 0;
       border-radius: 0;
       text-align: center;
@@ -519,6 +519,107 @@
       .action-row .btn { width: 100%; }
       .sticky-name { min-width: 178px; max-width: 178px; left: 52px; }
     }
+      @media (max-width: 480px) {
+      :root {
+        --bottom-nav-h: 70px;
+      }
+
+      .container {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 12px;
+        border-radius: 18px;
+      }
+
+      .header-card {
+        padding: 13px;
+      }
+
+      .header-card h1 {
+        font-size: 22px;
+      }
+
+      .header-card p {
+        font-size: 13px;
+      }
+
+      .action-row .btn {
+        width: 100%;
+      }
+
+      .marks-wrap {
+        border-radius: 8px;
+      }
+
+      table.excel-grid {
+        min-width: 920px;
+        font-size: 12px;
+      }
+
+      table.excel-grid th,
+      table.excel-grid td {
+        padding: 2px 3px;
+      }
+
+      table.excel-grid th {
+        font-size: 10.5px;
+        line-height: 1.15;
+      }
+
+      table.excel-grid .sticky-col {
+        min-width: 38px;
+        max-width: 38px;
+        width: 38px;
+      }
+
+      table.excel-grid .sticky-name {
+        left: 38px;
+        min-width: 104px;
+        max-width: 104px;
+        width: 104px;
+        font-size: 11px;
+        line-height: 1.15;
+        white-space: normal;
+        word-break: break-word;
+      }
+
+      .reg {
+        font-size: 9.5px;
+        margin-top: 2px;
+        line-height: 1.1;
+      }
+
+      .mark-input,
+      .grade-select,
+      .remark-input {
+        min-width: 46px;
+        height: 30px;
+        font-size: 14px;
+        padding: 2px;
+      }
+
+      .grade-select {
+        min-width: 62px;
+      }
+
+      .remark-input {
+        min-width: 82px;
+      }
+
+      .excel-help {
+        font-size: 11px;
+        padding: 7px 9px;
+        margin: 6px 0 8px;
+      }
+
+      .student-chip {
+        min-height: 32px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -527,7 +628,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V61 removes quick marks pad and uses an Excel-like marks entry grid.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V62 improves mobile cell-to-cell movement and reduces frozen student column size.</p>
       </div>
     </header>
 
@@ -846,7 +947,21 @@
     function smoothFocusControl(control) {
       if (!control) return;
       control.focus({ preventScroll: true });
-      control.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+      const wrap = control.closest('.marks-wrap');
+      if (wrap) {
+        const wrapRect = wrap.getBoundingClientRect();
+        const cell = control.closest('td,th');
+        const cellRect = cell ? cell.getBoundingClientRect() : control.getBoundingClientRect();
+        const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - (wrapRect.width * 0.52) + (cellRect.width / 2);
+
+        wrap.scrollTo({
+          left: Math.max(0, targetLeft),
+          behavior: 'smooth'
+        });
+      }
+
+      control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
 
     function shouldAutoMoveFromInput(input) {
@@ -856,15 +971,15 @@
 
       if (!value || input.classList.contains('input-error')) return false;
 
-      // One-digit max fields should move immediately after a valid entry.
+      // Do not auto-jump from Attendance to SEE dropdown on mobile.
+      if (field === 'attendance' && isMobileView()) return false;
+
+      // One-digit max fields move after one valid digit, but V62 uses a slower delay on mobile.
       if (max <= 5 && value.length >= 1) return true;
 
-      // For two-digit marks, move only after two digits or exact maximum.
+      // For two-digit marks, move after two digits or exact maximum.
       if (max > 5 && value.length >= 2) return true;
       if (Number(value) === max) return true;
-
-      // Do not auto-jump from attendance to SEE dropdown on mobile.
-      if (field === 'attendance') return false;
 
       return false;
     }
@@ -879,6 +994,7 @@
       if (shouldAutoMoveFromInput(input)) {
         window.clearTimeout(input._moveTimer);
         input._moveTimer = window.setTimeout(() => {
+          // Auto movement should be soft on mobile: only one cell ahead.
           const next = nextEntryControl(input);
 
           // Stop before SEE dropdown on mobile. Faculty should tap the SEE grade manually.
@@ -887,14 +1003,12 @@
             return;
           }
 
-          if (next && next.tagName !== 'SELECT') {
-            smoothFocusControl(next);
-          } else if (next && next.tagName === 'SELECT') {
+          if (next) {
             smoothFocusControl(next);
           } else {
-            if (state.activeInput) state.activeInput.blur();
+            input.blur();
           }
-        }, 150);
+        }, isMobileView() ? 360 : 150);
       }
     }
 
@@ -1364,7 +1478,7 @@
       }
 
       if (next) {
-        smoothFocusControl(next);
+        setTimeout(() => smoothFocusControl(next), isMobileView() ? 80 : 0);
       } else {
         state.activeInput.blur();
       }
