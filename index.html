@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V66 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V68 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -181,6 +181,78 @@
 
     .stat .num { font-size: 24px; font-weight: 900; line-height: 1; color: var(--primary); }
     .stat .label { margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 800; }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .progress-title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #173866;
+    }
+
+    .progress-subtitle {
+      margin-top: 3px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .progress-percent {
+      min-width: 54px;
+      text-align: right;
+      color: var(--primary);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .progress-track {
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e6edf8;
+      border: 1px solid #d3e0f1;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      transition: width 0.35s ease;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .table-success {
+      display: none;
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #e8f7ed;
+      border: 1px solid #c7ead2;
+      color: var(--success);
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .table-success.show {
+      display: block;
+    }
 
     .table-tools {
       display: flex;
@@ -636,7 +708,42 @@
         padding: 6px 10px;
         font-size: 12px;
       }
+
+      #marksProgressCard {
+        padding: 10px 12px;
+      }
+
+      .progress-title {
+        font-size: 14px;
+      }
+
+      .progress-subtitle {
+        font-size: 12px;
+      }
+
+      .progress-percent {
+        font-size: 18px;
+      }
+
+      .progress-track {
+        height: 10px;
+      }
+
+      .progress-meta {
+        font-size: 11px;
+      }
     }
+  
+    @media (max-width: 480px) {
+      #marksCard {
+        scroll-margin-top: 96px;
+      }
+
+      #marksBody tr:first-child .sticky-name {
+        scroll-margin-top: 112px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -645,7 +752,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V66 shows loading-only dropdowns while fetching data from Sheets.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V68 replaces summary cards with a compact progress bar and keeps success message visible.</p>
       </div>
     </header>
 
@@ -681,16 +788,25 @@
 
         <div id="marksNotice" class="notice info show">Loading dropdown data from Apps Script...</div>
 
-        <div class="card">
-          <div class="summary-row">
-            <div class="stat"><div class="num" id="studentCount">0</div><div class="label">Students</div></div>
-            <div class="stat"><div class="num" id="completedCount">0</div><div class="label">Completed</div></div>
-            <div class="stat"><div class="num" id="scaleMax">30</div><div class="label">CIA Scale</div></div>
-            <div class="stat"><div class="num" id="totalMax">100</div><div class="label">Total Max</div></div>
+        <div class="card" id="marksProgressCard">
+          <div class="progress-head">
+            <div>
+              <div class="progress-title">Entry Progress</div>
+              <div class="progress-subtitle"><span id="completedCount">0</span> of <span id="studentCount">0</span> students completed</div>
+            </div>
+            <div class="progress-percent" id="progressPercent">0%</div>
+          </div>
+          <div class="progress-track" aria-label="Marks entry progress">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-meta">
+            <span>CIA Scale: <b id="scaleMax">30</b></span>
+            <span>Total Max: <b id="totalMax">100</b></span>
           </div>
         </div>
 
         <div class="card" id="marksCard" style="display:none;">
+          <div id="tableSuccessNotice" class="table-success"></div>
           <div class="table-tools">
             <span class="student-chip" id="paperModeChip">Fast Entry Mode</span>
             <span class="swipe-note">Swipe table →</span>
@@ -806,6 +922,10 @@
       marksBody: document.getElementById('marksBody'),
       marksTable: document.getElementById('marksTable'),
       marksCard: document.getElementById('marksCard'),
+      marksProgressCard: document.getElementById('marksProgressCard'),
+      progressFill: document.getElementById('progressFill'),
+      progressPercent: document.getElementById('progressPercent'),
+      tableSuccessNotice: document.getElementById('tableSuccessNotice'),
       studentCount: document.getElementById('studentCount'),
       completedCount: document.getElementById('completedCount'),
       scaleMax: document.getElementById('scaleMax'),
@@ -1025,6 +1145,47 @@
       }, isMobileView() ? 300 : 80);
     }
 
+    function showTableSuccessMessage(message) {
+      if (!el.tableSuccessNotice) return;
+      el.tableSuccessNotice.textContent = message;
+      el.tableSuccessNotice.classList.add('show');
+    }
+
+    function prepareLoadedMobileView(message) {
+      showTableSuccessMessage(message);
+
+      // Keep progress bar visible; hide only the large top form notice on mobile
+      // because the success message is now shown inside the marks table card.
+      if (isMobileView()) {
+        const notice = document.getElementById('marksNotice');
+        if (notice) notice.style.display = 'none';
+      }
+    }
+
+    function scrollToFirstStudentAfterLoad() {
+      if (!isMobileView()) return;
+      const firstStudentNameCell = document.querySelector('#marksBody tr:first-child .sticky-name');
+      const firstInput = document.querySelector('#marksBody tr:first-child [data-field="mid1"], #marksBody tr:first-child [data-field="practicalMarks"]');
+      const wrap = document.querySelector('.marks-wrap');
+
+      if (wrap) {
+        wrap.scrollTo({ left: 0, behavior: 'smooth' });
+      }
+
+      setTimeout(() => {
+        const target = firstStudentNameCell || el.marksCard;
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        }
+      }, 180);
+
+      setTimeout(() => {
+        if (firstInput) {
+          firstInput.focus({ preventScroll: true });
+        }
+      }, 720);
+    }
+
     function shouldAutoMoveFromInput(input) {
       const max = Number(input.dataset.max || 0);
       const value = String(input.value || '');
@@ -1176,6 +1337,11 @@
       }, changedField);
 
       showDropdownLoading(selects, changedField);
+      if (!isReport) {
+        if (el.marksProgressCard) el.marksProgressCard.style.display = '';
+        if (el.marksNotice) el.marksNotice.style.display = '';
+        if (el.tableSuccessNotice) el.tableSuccessNotice.classList.remove('show');
+      }
       if (isReport) {
         showNotice(el.reportNotice, 'info', 'Loading dropdown data from Sheets...');
       } else {
@@ -1263,7 +1429,10 @@
         if (state.isFinalLocked) {
           showNotice(el.marksNotice, 'success', `This paper is already final submitted for ${state.students.length} students. Student data is hidden to prevent accidental editing.`);
         } else {
-          showNotice(el.marksNotice, 'success', `${state.students.length} students loaded successfully. Enter marks row-wise.`);
+          const successMessage = `${state.students.length} students loaded successfully. Start entering marks from the first student.`;
+          showNotice(el.marksNotice, 'success', successMessage);
+          prepareLoadedMobileView(successMessage);
+          scrollToFirstStudentAfterLoad();
         }
       } catch (err) {
         showNotice(el.marksNotice, 'error', err.message || String(err));
@@ -1423,6 +1592,11 @@
         if (internalOk && gradeOk && practicalOk) completed++;
       });
       el.completedCount.textContent = completed;
+      const total = rows.length || 0;
+      if (el.studentCount) el.studentCount.textContent = total;
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+      if (el.progressPercent) el.progressPercent.textContent = percent + '%';
+      if (el.progressFill) el.progressFill.style.width = percent + '%';
     }
 
     function buildPayload(status) {
