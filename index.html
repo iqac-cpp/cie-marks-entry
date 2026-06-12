@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V60 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -281,6 +281,13 @@
       background: #fff;
     }
 
+    .mark-input.input-error {
+      border-color: var(--danger);
+      background: #fff7f7;
+      color: var(--danger);
+      box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.10);
+    }
+
     .total-cell { background: #e8f7ed; color: #0d682d; font-weight: 900; }
     .result-p { color: var(--success); font-weight: 900; }
     .result-f { color: var(--danger); font-weight: 900; }
@@ -439,7 +446,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V60 improves fast marks entry and validation.</p>
       </div>
     </header>
 
@@ -710,6 +717,144 @@
       }
     }
 
+    function fieldLabel(field) {
+      const labels = {
+        mid1: 'Mid Exam - 1',
+        mid2: 'Mid Exam - 2',
+        assignments: 'Assignments',
+        seminar: 'Seminar/GD/Field Trip',
+        attendance: 'Clean & Green & Attendance',
+        practicalMarks: 'Practical Marks'
+      };
+      return labels[field] || field;
+    }
+
+    function isMobileView() {
+      return window.matchMedia('(max-width: 760px)').matches;
+    }
+
+    function validateMarkInput(input, showMessageFlag = true) {
+      if (!input) return true;
+      const field = input.dataset.field || '';
+      const max = Number(input.dataset.max || 0);
+      const value = String(input.value || '').trim();
+
+      input.value = value.replace(/[^0-9]/g, '');
+
+      if (input.value === '') {
+        input.classList.remove('input-error');
+        return true;
+      }
+
+      const n = Number(input.value);
+      if (!Number.isFinite(n) || n < 0 || n > max) {
+        input.classList.add('input-error');
+        if (showMessageFlag) {
+          showNotice(el.marksNotice, 'error', `${fieldLabel(field)} cannot be more than ${max}. Please correct the highlighted mark.`);
+        }
+        return false;
+      }
+
+      input.classList.remove('input-error');
+      return true;
+    }
+
+    function hasAnyInvalidMarks() {
+      return [...document.querySelectorAll('.mark-input')].some(input => !validateMarkInput(input, false));
+    }
+
+    function orderedEntryControls() {
+      const controls = [];
+      document.querySelectorAll('#marksBody tr').forEach(row => {
+        ['mid1', 'mid2', 'assignments', 'seminar', 'attendance'].forEach(field => {
+          const item = row.querySelector(`[data-field="${field}"]`);
+          if (item) controls.push(item);
+        });
+        const grade = row.querySelector('[data-field="seeTheory"]');
+        if (grade) controls.push(grade);
+        const practical = row.querySelector('[data-field="practicalMarks"]');
+        if (practical) controls.push(practical);
+      });
+      return controls;
+    }
+
+    function nextEntryControl(current) {
+      const controls = orderedEntryControls();
+      const index = controls.indexOf(current);
+      return index >= 0 ? controls[index + 1] : null;
+    }
+
+    function smoothFocusControl(control) {
+      if (!control) return;
+      control.focus({ preventScroll: true });
+      control.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    }
+
+    function shouldAutoMoveFromInput(input) {
+      const max = Number(input.dataset.max || 0);
+      const field = input.dataset.field || '';
+      const value = String(input.value || '');
+
+      if (!value || input.classList.contains('input-error')) return false;
+
+      // One-digit max fields should move immediately after a valid entry.
+      if (max <= 5 && value.length >= 1) return true;
+
+      // For two-digit marks, move only after two digits or exact maximum.
+      if (max > 5 && value.length >= 2) return true;
+      if (Number(value) === max) return true;
+
+      // Do not auto-jump from attendance to SEE dropdown on mobile.
+      if (field === 'attendance') return false;
+
+      return false;
+    }
+
+    function handleMarkInput(input) {
+      const rowIndex = Number(input.closest('tr').dataset.row);
+      const ok = validateMarkInput(input, true);
+      updateRow(rowIndex);
+
+      if (!ok) return;
+
+      if (shouldAutoMoveFromInput(input)) {
+        window.clearTimeout(input._moveTimer);
+        input._moveTimer = window.setTimeout(() => {
+          const next = nextEntryControl(input);
+
+          // Stop before SEE dropdown on mobile. Faculty should tap the SEE grade manually.
+          if (next && next.tagName === 'SELECT' && isMobileView()) {
+            hideQuickPad();
+            input.blur();
+            return;
+          }
+
+          if (next && next.tagName !== 'SELECT') {
+            smoothFocusControl(next);
+          } else if (next && next.tagName === 'SELECT') {
+            hideQuickPad();
+            smoothFocusControl(next);
+          } else {
+            hideQuickPad();
+          }
+        }, 150);
+      }
+    }
+
+    function handleGradeChange(select) {
+      const rowIndex = Number(select.closest('tr').dataset.row);
+      updateRow(rowIndex);
+
+      // After manual SEE grade selection, move to Practical Marks only when the paper has practical.
+      const mode = getMode();
+      if (mode.hasPractical) {
+        const practical = select.closest('tr').querySelector('[data-field="practicalMarks"]');
+        if (practical && isMobileView()) {
+          setTimeout(() => smoothFocusControl(practical), 120);
+        }
+      }
+    }
+
     function setOptions(select, items, selectedValue = '') {
       const current = selectedValue || select.value || '';
       const clean = [...new Set((items || []).filter(Boolean))];
@@ -881,21 +1026,25 @@
           state.activeInput = input;
           showQuickPad(input);
         });
-        input.addEventListener('input', () => {
-          enforceMax(input);
-          updateRow(Number(input.closest('tr').dataset.row));
+        input.addEventListener('input', () => handleMarkInput(input));
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            moveNext();
+          }
         });
       });
 
       document.querySelectorAll('.grade-select').forEach(select => {
-        select.addEventListener('change', () => updateRow(Number(select.closest('tr').dataset.row)));
+        select.addEventListener('change', () => handleGradeChange(select));
       });
 
       state.students.forEach((s, i) => updateRow(i));
     }
 
     function inputCell(row, field, max, value = '') {
-      return `<td><input class="mark-input" inputmode="numeric" pattern="[0-9]*" data-field="${field}" data-max="${max}" data-row="${row}" value="${escapeAttr(value)}"/></td>`;
+      const hint = field === 'attendance' ? 'done' : 'next';
+      return `<td><input class="mark-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" value="${escapeAttr(value)}"/></td>`;
     }
 
     function gradeSelect(value) {
@@ -911,10 +1060,8 @@
     }
 
     function enforceMax(input) {
-      const max = Number(input.dataset.max);
-      let value = input.value.replace(/[^0-9]/g, '');
-      if (value !== '' && Number(value) > max) value = String(max);
-      input.value = value;
+      // V60: do not silently change wrong marks. Keep the value visible and show error.
+      return validateMarkInput(input, true);
     }
 
     function gradeToMarks(grade) {
@@ -927,7 +1074,11 @@
       const row = document.querySelector(`tr[data-row="${rowIndex}"]`);
       if (!row) return;
       const c = state.courseSettings || {};
-      const get = field => Number(row.querySelector(`[data-field="${field}"]`)?.value || 0);
+      const get = field => {
+        const input = row.querySelector(`[data-field="${field}"]`);
+        if (!input || input.classList.contains('input-error')) return 0;
+        return Number(input.value || 0);
+      };
 
       const midTotal = get('mid1') + get('mid2');
       const internalTotal = midTotal + get('assignments') + get('seminar') + get('attendance');
@@ -959,9 +1110,13 @@
       const rows = [...document.querySelectorAll('#marksBody tr')];
       let completed = 0;
       rows.forEach(row => {
-        const internalOk = ['mid1','mid2','assignments','seminar','attendance'].every(f => row.querySelector(`[data-field="${f}"]`)?.value !== '');
+        const internalOk = ['mid1','mid2','assignments','seminar','attendance'].every(f => {
+          const item = row.querySelector(`[data-field="${f}"]`);
+          return item && item.value !== '' && !item.classList.contains('input-error');
+        });
         const gradeOk = !mode.hasTheory || row.querySelector('[data-field="seeTheory"]')?.value;
-        const practicalOk = !mode.hasPractical || row.querySelector('[data-field="practicalMarks"]')?.value !== '';
+        const practicalItem = row.querySelector('[data-field="practicalMarks"]');
+        const practicalOk = !mode.hasPractical || (practicalItem && practicalItem.value !== '' && !practicalItem.classList.contains('input-error'));
         if (internalOk && gradeOk && practicalOk) completed++;
       });
       el.completedCount.textContent = completed;
@@ -1025,11 +1180,17 @@
         const row = document.querySelector(`tr[data-row="${i}"]`);
         const reg = state.students[i].universityRegisterNo;
         for (const f of ['mid1','mid2','assignments','seminar','attendance']) {
-          if (row.querySelector(`[data-field="${f}"]`).value === '') throw new Error('Please complete internal marks for ' + reg);
+          const item = row.querySelector(`[data-field="${f}"]`);
+          if (!item || item.value === '') throw new Error('Please complete internal marks for ' + reg);
+          if (!validateMarkInput(item, false)) throw new Error(`${fieldLabel(f)} cannot be more than ${item.dataset.max} for ${reg}`);
         }
         if (status === 'Final Submitted') {
           if (mode.hasTheory && !row.querySelector('[data-field="seeTheory"]').value) throw new Error('Please select SEE grade for ' + reg);
-          if (mode.hasPractical && row.querySelector('[data-field="practicalMarks"]').value === '') throw new Error('Please enter Practical marks for ' + reg);
+          if (mode.hasPractical) {
+            const practical = row.querySelector('[data-field="practicalMarks"]');
+            if (!practical || practical.value === '') throw new Error('Please enter Practical marks for ' + reg);
+            if (!validateMarkInput(practical, false)) throw new Error(`Practical Marks cannot be more than ${practical.dataset.max} for ${reg}`);
+          }
         }
       }
     }
@@ -1140,8 +1301,7 @@
     function padValue(value) {
       if (!state.activeInput) return;
       state.activeInput.value = value;
-      enforceMax(state.activeInput);
-      updateRow(Number(state.activeInput.closest('tr').dataset.row));
+      handleMarkInput(state.activeInput);
     }
     function clearActive() {
       if (!state.activeInput) return;
@@ -1150,13 +1310,30 @@
     }
     function moveNext() {
       if (!state.activeInput) return;
-      const all = [...document.querySelectorAll('.mark-input')];
-      const index = all.indexOf(state.activeInput);
-      const next = all[index + 1];
-      if (next) {
-        next.focus();
-        next.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-      } else hideQuickPad();
+
+      if (!validateMarkInput(state.activeInput, true)) {
+        state.activeInput.focus();
+        return;
+      }
+
+      const next = nextEntryControl(state.activeInput);
+
+      // Same as stable Apps Script version: stop before SEE dropdown on mobile.
+      if (next && next.tagName === 'SELECT' && isMobileView()) {
+        hideQuickPad();
+        state.activeInput.blur();
+        showNotice(el.marksNotice, 'info', 'Internal marks completed for this row. Tap SEE Grade manually to continue.');
+        return;
+      }
+
+      if (next && next.tagName !== 'SELECT') {
+        smoothFocusControl(next);
+      } else if (next && next.tagName === 'SELECT') {
+        hideQuickPad();
+        smoothFocusControl(next);
+      } else {
+        hideQuickPad();
+      }
     }
 
     function escapeHtml(value) {
