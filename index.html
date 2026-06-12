@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V65 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V66 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -141,6 +141,12 @@
       border-color: var(--primary-2);
       box-shadow: 0 0 0 4px rgba(31, 91, 181, 0.12);
       background: #fff;
+    }
+
+    .field select:disabled {
+      color: #6b7890;
+      background: #f4f7fc;
+      opacity: 1;
     }
 
     .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
@@ -639,7 +645,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V65 fixes practical-to-next-row Mid-1 mobile scroll movement.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V66 shows loading-only dropdowns while fetching data from Sheets.</p>
       </div>
     </header>
 
@@ -1073,20 +1079,67 @@
       }
     }
 
+    function setLoadingOption(select, text = 'Loading...') {
+      if (!select) return;
+      select.disabled = true;
+      select.innerHTML = `<option value="">${text}</option>`;
+      select.value = '';
+    }
+
+    function setSelectEnabled(select, enabled = true) {
+      if (!select) return;
+      select.disabled = !enabled;
+    }
+
     function setOptions(select, items, selectedValue = '') {
-      const current = selectedValue || select.value || '';
+      const current = selectedValue || '';
       const clean = [...new Set((items || []).filter(Boolean))];
       select.innerHTML = '<option value="">Select</option>' + clean.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
       if (clean.includes(current)) select.value = current;
+      select.disabled = false;
     }
 
     function setPaperOptions(select, papers, selectedPaper = '') {
-      const current = selectedPaper || select.value || '';
+      const current = selectedPaper || '';
       select.innerHTML = '<option value="">Select</option>' + (papers || []).map((p, idx) =>
         `<option value="${escapeHtml(p.paperCourseName)}" data-index="${idx}">${escapeHtml(p.paperCourseName)}</option>`
       ).join('');
       const exists = (papers || []).some(p => p.paperCourseName === current);
       if (exists) select.value = current;
+      select.disabled = false;
+    }
+
+    function clearLowerParams(params, changedField) {
+      if (changedField === 'academicYear') {
+        params.semester = '';
+        params.programName = '';
+        params.subjectName = '';
+      } else if (changedField === 'semester') {
+        params.programName = '';
+        params.subjectName = '';
+      } else if (changedField === 'programName') {
+        params.subjectName = '';
+      }
+      return params;
+    }
+
+    function showDropdownLoading(selects, changedField) {
+      const order = ['academicYear', 'semester', 'programName', 'subjectName', 'paperCourseName'];
+      const start = changedField ? order.indexOf(changedField) + 1 : 0;
+
+      order.forEach((field, index) => {
+        const select = selects[field];
+        if (!select) return;
+        if (index >= start) {
+          setLoadingOption(select);
+        } else {
+          setSelectEnabled(select, false);
+        }
+      });
+    }
+
+    function enableDropdowns(selects) {
+      Object.values(selects).forEach(select => setSelectEnabled(select, true));
     }
 
     function selectedPaper() {
@@ -1099,7 +1152,7 @@
       return idx !== undefined ? state.reportPapers[Number(idx)] : null;
     }
 
-    async function loadFilters(target = 'marks') {
+    async function loadFilters(target = 'marks', changedField = '') {
       const isReport = target === 'reports';
       const selects = isReport ? {
         academicYear: el.reportAcademicYear,
@@ -1115,15 +1168,32 @@
         paperCourseName: el.paperCourseName
       };
 
-      const params = {
+      const params = clearLowerParams({
         academicYear: selects.academicYear.value,
         semester: selects.semester.value,
         programName: selects.programName.value,
         subjectName: selects.subjectName.value
-      };
+      }, changedField);
 
-      const data = await jsonp('getFilters', params);
-      if (!data.success) throw new Error(data.message || 'Could not load filters');
+      showDropdownLoading(selects, changedField);
+      if (isReport) {
+        showNotice(el.reportNotice, 'info', 'Loading dropdown data from Sheets...');
+      } else {
+        showNotice(el.marksNotice, 'info', 'Loading dropdown data from Sheets...');
+      }
+
+      let data;
+      try {
+        data = await jsonp('getFilters', params);
+      } catch (err) {
+        enableDropdowns(selects);
+        throw err;
+      }
+
+      if (!data.success) {
+        enableDropdowns(selects);
+        throw new Error(data.message || 'Could not load filters');
+      }
 
       setOptions(selects.academicYear, data.academicYears, params.academicYear);
       setOptions(selects.semester, data.semesters, params.semester);
@@ -1132,12 +1202,14 @@
 
       if (isReport) {
         state.reportPapers = data.papers || [];
-        setPaperOptions(selects.paperCourseName, state.reportPapers, selects.paperCourseName.value);
+        setPaperOptions(selects.paperCourseName, state.reportPapers, changedField ? '' : selects.paperCourseName.value);
       } else {
         state.papers = data.papers || [];
-        setPaperOptions(selects.paperCourseName, state.papers, selects.paperCourseName.value);
-        applySelectedPaperDefaults();
+        setPaperOptions(selects.paperCourseName, state.papers, changedField ? '' : selects.paperCourseName.value);
+        if (!changedField) applySelectedPaperDefaults();
       }
+
+      enableDropdowns(selects);
     }
 
     function applySelectedPaperDefaults() {
@@ -1546,16 +1618,27 @@
     function escapeAttr(value) { return escapeHtml(value); }
 
     function wireFilters() {
-      [el.academicYear, el.semester, el.programName, el.subjectName].forEach(sel => {
+      [
+        [el.academicYear, 'academicYear'],
+        [el.semester, 'semester'],
+        [el.programName, 'programName'],
+        [el.subjectName, 'subjectName']
+      ].forEach(([sel, field]) => {
         sel.addEventListener('change', async () => {
-          try { await loadFilters('marks'); } catch (err) { showNotice(el.marksNotice, 'error', err.message); }
+          try { await loadFilters('marks', field); } catch (err) { showNotice(el.marksNotice, 'error', err.message); }
         });
       });
+
       el.paperCourseName.addEventListener('change', applySelectedPaperDefaults);
 
-      [el.reportAcademicYear, el.reportSemester, el.reportProgramName, el.reportSubjectName].forEach(sel => {
+      [
+        [el.reportAcademicYear, 'academicYear'],
+        [el.reportSemester, 'semester'],
+        [el.reportProgramName, 'programName'],
+        [el.reportSubjectName, 'subjectName']
+      ].forEach(([sel, field]) => {
         sel.addEventListener('change', async () => {
-          try { await loadFilters('reports'); } catch (err) { showNotice(el.reportNotice, 'error', err.message); }
+          try { await loadFilters('reports', field); } catch (err) { showNotice(el.reportNotice, 'error', err.message); }
         });
       });
     }
