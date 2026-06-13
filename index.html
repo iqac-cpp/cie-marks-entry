@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V74 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V75 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -406,7 +406,7 @@
 
     @media (max-width: 480px) {
       table.excel-grid th {
-        top: var(--sticky-table-head-top, 172px);
+        top: 0;
         z-index: 18;
       }
 
@@ -733,6 +733,10 @@
 
       .marks-wrap {
         border-radius: 8px;
+        max-height: calc(100svh - var(--marks-table-offset, 330px));
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
       }
 
       table.excel-grid {
@@ -1134,11 +1138,18 @@
     function updateStickyProgressTop() {
       const header = document.querySelector('.app-header');
       const progress = document.getElementById('marksProgressCard');
+      const bottomNav = document.querySelector('.bottom-nav');
+
       const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 92;
-      const progressHeight = progress ? Math.ceil(progress.getBoundingClientRect().height) : 64;
+      const progressHeight = progress ? Math.ceil(progress.getBoundingClientRect().height) : 70;
+      const bottomHeight = bottomNav ? Math.ceil(bottomNav.getBoundingClientRect().height) : 78;
 
       document.documentElement.style.setProperty('--sticky-progress-top', (headerHeight + 6) + 'px');
-      document.documentElement.style.setProperty('--sticky-table-head-top', (headerHeight + progressHeight + 18) + 'px');
+
+      // V75: table header now freezes inside the scrollable marks table at top:0.
+      // This prevents the header row from appearing in the middle of student rows.
+      const offset = headerHeight + progressHeight + bottomHeight + 58;
+      document.documentElement.style.setProperty('--marks-table-offset', offset + 'px');
     }
 
     function validateMarkInput(input, showMessageFlag = true) {
