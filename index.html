@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V81 - Final Submit Modal and Row Flow</title>
+  <title>CIE Mobile-First Portal V82 - Reset Selection Button</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -855,6 +855,11 @@
         width: 100%;
       }
 
+      #resetSelectionBtn,
+      #resetSelectionBottomBtn {
+        background: #f8fbff;
+      }
+
       .marks-wrap {
         border-radius: 8px;
         max-height: calc(100svh - var(--marks-table-offset, 330px));
@@ -1011,7 +1016,8 @@
           </div>
 
           <div class="action-row">
-            <button id="loadBtn" class="btn primary full" type="button" onclick="loadStudents()">Load Students</button>
+            <button id="loadBtn" class="btn primary" type="button" onclick="loadStudents()">Load Students</button>
+            <button id="resetSelectionBtn" class="btn" type="button" onclick="resetPaperSelection()">Reset Selection</button>
           </div>
         </div>
 
@@ -1073,6 +1079,7 @@
           <div class="action-row">
             <button id="saveInternalBtn" class="btn warning" type="button" onclick="saveInternal()">Save Internal Marks</button>
             <button id="finalSubmitBtn" class="btn success" type="button" onclick="finalSubmit()">Final Submit</button>
+            <button id="resetSelectionBottomBtn" class="btn" type="button" onclick="resetPaperSelection()">Reset / Change Paper</button>
           </div>
         </div>
       </section>
@@ -1173,6 +1180,8 @@
       scaleMax: document.getElementById('scaleMax'),
       totalMax: document.getElementById('totalMax'),
       paperModeChip: document.getElementById('paperModeChip'),
+      resetSelectionBtn: document.getElementById('resetSelectionBtn'),
+      resetSelectionBottomBtn: document.getElementById('resetSelectionBottomBtn'),
       reportAcademicYear: document.getElementById('reportAcademicYear'),
       reportSemester: document.getElementById('reportSemester'),
       reportProgramName: document.getElementById('reportProgramName'),
@@ -1630,6 +1639,54 @@
       showNotice(el.marksNotice, 'info', 'Form reset successfully. Select paper details for the next entry.');
     }
 
+    async function resetPaperSelection() {
+      state.students = [];
+      state.existingMarks = {};
+      state.courseSettings = null;
+      state.activeInput = null;
+      state.isFinalLocked = false;
+      state.papers = [];
+
+      [el.academicYear, el.semester, el.programName, el.subjectName, el.paperCourseName].forEach(select => {
+        if (select) {
+          select.disabled = false;
+          select.value = '';
+        }
+      });
+
+      if (el.facultyName) el.facultyName.value = '';
+      if (el.marksBody) el.marksBody.innerHTML = '';
+      if (el.marksCard) el.marksCard.style.display = 'none';
+      if (el.tableSuccessNotice) el.tableSuccessNotice.classList.remove('show');
+      if (el.floatingStatus) el.floatingStatus.className = 'floating-status';
+
+      if (el.studentCount) el.studentCount.textContent = '0';
+      if (el.completedCount) el.completedCount.textContent = '0';
+      if (el.progressPercent) el.progressPercent.textContent = '0%';
+      if (el.progressFill) el.progressFill.style.width = '0%';
+
+      const saveBtn = document.getElementById('saveInternalBtn');
+      const finalBtn = document.getElementById('finalSubmitBtn');
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Internal Marks';
+      }
+      if (finalBtn) {
+        finalBtn.disabled = false;
+        finalBtn.textContent = 'Final Submit';
+      }
+
+      showNotice(el.marksNotice, 'info', 'Selection reset. Please select Academic Year, Semester, Course, Subject and Paper again.');
+
+      try {
+        await loadFilters('marks');
+      } catch (err) {
+        showNotice(el.marksNotice, 'error', err.message || String(err));
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     async function closeFinalSuccessModal() {
       if (el.finalSuccessModal) {
         el.finalSuccessModal.classList.remove('show');
@@ -1855,6 +1912,25 @@
       }, changedField);
 
       showDropdownLoading(selects, changedField);
+
+      // V82: when a higher dropdown is changed, immediately clear lower dropdown values
+      // so old Course/Subject/Paper choices do not appear locked.
+      if (changedField === 'academicYear') {
+        selects.semester.value = '';
+        selects.programName.value = '';
+        selects.subjectName.value = '';
+        selects.paperCourseName.value = '';
+      } else if (changedField === 'semester') {
+        selects.programName.value = '';
+        selects.subjectName.value = '';
+        selects.paperCourseName.value = '';
+      } else if (changedField === 'programName') {
+        selects.subjectName.value = '';
+        selects.paperCourseName.value = '';
+      } else if (changedField === 'subjectName') {
+        selects.paperCourseName.value = '';
+      }
+
       if (!isReport) {
         if (el.marksProgressCard) el.marksProgressCard.style.display = '';
         if (el.marksNotice) el.marksNotice.style.display = '';
@@ -2375,6 +2451,7 @@
     window.loadStudents = loadStudents;
     window.saveInternal = saveInternal;
     window.finalSubmit = finalSubmit;
+    window.resetPaperSelection = resetPaperSelection;
     window.closeFinalSuccessModal = closeFinalSuccessModal;
     window.downloadReport = downloadReport;
     window.loadDashboard = loadDashboard;
