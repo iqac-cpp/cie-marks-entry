@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V77 - Backend Action Fix</title>
+  <title>CIE Mobile-First Portal V78 - Backend Version Check</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1147,7 +1147,13 @@
       for (let i = 0; i < text.length; i += chunkSize) chunks.push(text.slice(i, i + chunkSize));
 
       const begin = await jsonp('beginSaveSession', { totalChunks: chunks.length });
-      if (!begin.success) throw new Error(begin.message || 'Could not start save session');
+      if (!begin.success) {
+        const msg = begin.message || 'Could not start save session';
+        if (/unknown action/i.test(msg)) {
+          throw new Error('Apps Script backend is still old or not deployed correctly. Please replace Code.gs with V78 and deploy a NEW VERSION in Apps Script. Details: ' + msg);
+        }
+        throw new Error(msg);
+      }
 
       for (let i = 0; i < chunks.length; i++) {
         const up = await jsonp('uploadSaveChunk', {
@@ -1159,7 +1165,13 @@
       }
 
       const finish = await jsonp('finishSaveSession', { sessionId: begin.sessionId }, 120000);
-      if (!finish.success) throw new Error(finish.message || 'Could not save marks');
+      if (!finish.success) {
+        const msg = finish.message || 'Could not save marks';
+        if (/unknown action/i.test(msg)) {
+          throw new Error('Apps Script backend is still old or not deployed correctly. Please replace Code.gs with V78 and deploy a NEW VERSION in Apps Script. Details: ' + msg);
+        }
+        throw new Error(msg);
+      }
       return finish;
     }
 
