@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V78 - Backend Version Check</title>
+  <title>CIE Mobile-First Portal V80 - New Web App URL</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1060,7 +1060,7 @@
   </div>
 
   <script>
-    const API_BASE = "https://script.google.com/macros/s/AKfycbyBQv6sdtv0JWT1CrlYsk5ZsOYSML_-9EOYcS1RryEfAAviS0poBmHanR96U9Ob7jBP/exec";
+    const API_BASE = "https://script.google.com/macros/s/AKfycbwKSjV6K7wTSqcY1VCnE1szl1PDc9OFHb4fxgwkCTpIp-Ycovmg56qVLXjiNk9T6T0G/exec";
     const VALID_GRADES = ['O', 'A+', 'A', 'B+', 'B', 'C', 'P', 'F', 'AB'];
     const GRADE_PERCENT = { 'O': 100, 'A+': 90, 'A': 80, 'B+': 70, 'B': 60, 'C': 55, 'P': 50, 'F': 0, 'AB': 0 };
 
@@ -1146,12 +1146,22 @@
       const chunks = [];
       for (let i = 0; i < text.length; i += chunkSize) chunks.push(text.slice(i, i + chunkSize));
 
-      const begin = await jsonp('beginSaveSession', { totalChunks: chunks.length });
+      let begin;
+      try {
+        begin = await jsonp('beginSaveSession', { totalChunks: chunks.length });
+      } catch (err) {
+        return savePayloadLegacyPost(payload);
+      }
+
       if (!begin.success) {
         const msg = begin.message || 'Could not start save session';
+
+        // V79 fallback: older Apps Script backend does not know beginSaveSession,
+        // but it already supports doPost(saveMarks). Use that path automatically.
         if (/unknown action/i.test(msg)) {
-          throw new Error('Apps Script backend is still old or not deployed correctly. Please replace Code.gs with V78 and deploy a NEW VERSION in Apps Script. Details: ' + msg);
+          return savePayloadLegacyPost(payload);
         }
+
         throw new Error(msg);
       }
 
@@ -1168,11 +1178,73 @@
       if (!finish.success) {
         const msg = finish.message || 'Could not save marks';
         if (/unknown action/i.test(msg)) {
-          throw new Error('Apps Script backend is still old or not deployed correctly. Please replace Code.gs with V78 and deploy a NEW VERSION in Apps Script. Details: ' + msg);
+          return savePayloadLegacyPost(payload);
         }
         throw new Error(msg);
       }
       return finish;
+    }
+
+    function savePayloadLegacyPost(payload) {
+      return new Promise((resolve, reject) => {
+        const iframeName = 'cie_save_iframe_' + Date.now();
+        const iframe = document.createElement('iframe');
+        iframe.name = iframeName;
+        iframe.style.display = 'none';
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = API_BASE;
+        form.target = iframeName;
+        form.style.display = 'none';
+
+        const input = document.createElement('textarea');
+        input.name = 'payload';
+        input.value = JSON.stringify(Object.assign({}, payload, { action: 'saveMarks' }));
+        form.appendChild(input);
+
+        let submitted = false;
+        let finished = false;
+
+        function cleanup() {
+          setTimeout(() => {
+            try { form.remove(); } catch (err) {}
+            try { iframe.remove(); } catch (err) {}
+          }, 800);
+        }
+
+        const timer = setTimeout(() => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          reject(new Error('Save request timed out. Please check internet and try again.'));
+        }, 120000);
+
+        iframe.onload = () => {
+          if (!submitted || finished) return;
+          finished = true;
+          clearTimeout(timer);
+          cleanup();
+          resolve({
+            success: true,
+            message: 'Marks save request sent successfully. Please check CIE_Entries sheet to confirm.'
+          });
+        };
+
+        iframe.onerror = () => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timer);
+          cleanup();
+          reject(new Error('Could not submit marks to Apps Script.'));
+        };
+
+        document.body.appendChild(iframe);
+        document.body.appendChild(form);
+
+        submitted = true;
+        form.submit();
+      });
     }
 
     function showNotice(box, type, message) {
@@ -1903,7 +1975,7 @@
         setBusy(btn, true, 'Saving...');
         showActionStatus('info', 'Saving internal marks. Please wait...');
         const result = await savePayloadChunked(buildPayload('Internal Saved'));
-        showActionStatus('success', result.message || 'Internal marks saved successfully.', 4500);
+        showActionStatus('success', result.message || 'Internal marks saved successfully.', 5500);
       } catch (err) {
         showActionStatus('error', err.message || String(err));
       } finally {
@@ -1918,7 +1990,7 @@
         setBusy(btn, true, 'Submitting...');
         showActionStatus('info', 'Final submitting marks. Please wait...');
         const result = await savePayloadChunked(buildPayload('Final Submitted'));
-        showActionStatus('success', result.message || 'Final submitted successfully. Marks are locked.', 6000);
+        showActionStatus('success', result.message || 'Final submitted successfully. Marks are locked.', 7000);
 
         // Do not hide the marks card immediately; otherwise faculty cannot see the success message.
         document.querySelectorAll('#marksBody input, #marksBody select').forEach(item => item.disabled = true);
