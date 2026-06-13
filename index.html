@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V73 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V74 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -404,6 +404,18 @@
       line-height: 1.2;
     }
 
+    @media (max-width: 480px) {
+      table.excel-grid th {
+        top: var(--sticky-table-head-top, 172px);
+        z-index: 18;
+      }
+
+      table.excel-grid th.sticky-col,
+      table.excel-grid th.sticky-name {
+        z-index: 22;
+      }
+    }
+
     table.excel-grid .sticky-col {
       position: sticky;
       left: 0;
@@ -503,6 +515,10 @@
     table.excel-grid th:nth-child(8),
     table.excel-grid th:nth-child(9),
     table.excel-grid th:nth-child(10),
+    table.excel-grid th:nth-child(12),
+    table.excel-grid th:nth-child(13),
+    table.excel-grid th:nth-child(14),
+    table.excel-grid th:nth-child(16),
     table.excel-grid td:nth-child(3),
     table.excel-grid td:nth-child(4),
     table.excel-grid td:nth-child(5),
@@ -510,7 +526,11 @@
     table.excel-grid td:nth-child(7),
     table.excel-grid td:nth-child(8),
     table.excel-grid td:nth-child(9),
-    table.excel-grid td:nth-child(10) {
+    table.excel-grid td:nth-child(10),
+    table.excel-grid td:nth-child(12),
+    table.excel-grid td:nth-child(13),
+    table.excel-grid td:nth-child(14),
+    table.excel-grid td:nth-child(16) {
       width: 58px;
       min-width: 58px;
       max-width: 58px;
@@ -660,6 +680,10 @@
       table.excel-grid th:nth-child(8),
       table.excel-grid th:nth-child(9),
       table.excel-grid th:nth-child(10),
+      table.excel-grid th:nth-child(12),
+      table.excel-grid th:nth-child(13),
+      table.excel-grid th:nth-child(14),
+      table.excel-grid th:nth-child(16),
       table.excel-grid td:nth-child(3),
       table.excel-grid td:nth-child(4),
       table.excel-grid td:nth-child(5),
@@ -667,7 +691,11 @@
       table.excel-grid td:nth-child(7),
       table.excel-grid td:nth-child(8),
       table.excel-grid td:nth-child(9),
-      table.excel-grid td:nth-child(10) {
+      table.excel-grid td:nth-child(10),
+      table.excel-grid td:nth-child(12),
+      table.excel-grid td:nth-child(13),
+      table.excel-grid td:nth-child(14),
+      table.excel-grid td:nth-child(16) {
         width: 46px;
         min-width: 46px;
         max-width: 46px;
@@ -1105,8 +1133,12 @@
 
     function updateStickyProgressTop() {
       const header = document.querySelector('.app-header');
-      const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 104;
+      const progress = document.getElementById('marksProgressCard');
+      const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 92;
+      const progressHeight = progress ? Math.ceil(progress.getBoundingClientRect().height) : 64;
+
       document.documentElement.style.setProperty('--sticky-progress-top', (headerHeight + 6) + 'px');
+      document.documentElement.style.setProperty('--sticky-table-head-top', (headerHeight + progressHeight + 18) + 'px');
     }
 
     function validateMarkInput(input, showMessageFlag = true) {
@@ -1682,6 +1714,7 @@
       const percent = total ? Math.round((completed / total) * 100) : 0;
       if (el.progressPercent) el.progressPercent.textContent = percent + '%';
       if (el.progressFill) el.progressFill.style.width = percent + '%';
+      updateStickyProgressTop();
     }
 
     function buildPayload(status) {
