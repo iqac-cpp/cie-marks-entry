@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V80 - New Web App URL</title>
+  <title>CIE Mobile-First Portal V81 - Final Submit Modal and Row Flow</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -318,6 +318,72 @@
       background: #eaf2ff;
       border-color: #cfe0f6;
       color: var(--primary);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(8, 24, 54, 0.56);
+      backdrop-filter: blur(6px);
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(420px, 100%);
+      border-radius: 24px;
+      background: #fff;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.30);
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+
+    .modal-icon {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 12px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: #e8f7ed;
+      color: var(--success);
+      font-size: 30px;
+      font-weight: 900;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 22px;
+      color: #163760;
+      font-weight: 900;
+    }
+
+    .modal-message {
+      margin: 10px 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.45;
+    }
+
+    .result-flash {
+      animation: resultFlash 1.05s ease-in-out 1;
+      box-shadow: inset 0 0 0 3px #15a34a;
+      background: #e8f7ed !important;
+    }
+
+    @keyframes resultFlash {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.08); }
+      100% { transform: scale(1); }
     }
 
     .table-tools {
@@ -1059,6 +1125,15 @@
     </main>
   </div>
 
+  <div id="finalSuccessModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="finalSuccessTitle">
+    <div class="modal-card">
+      <div class="modal-icon">✓</div>
+      <h2 id="finalSuccessTitle" class="modal-title">Final Submitted Successfully</h2>
+      <div id="finalSuccessMessage" class="modal-message">The CIE marks have been submitted successfully.</div>
+      <button class="btn success full" type="button" onclick="closeFinalSuccessModal()">Close & Reset Form</button>
+    </div>
+  </div>
+
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbwKSjV6K7wTSqcY1VCnE1szl1PDc9OFHb4fxgwkCTpIp-Ycovmg56qVLXjiNk9T6T0G/exec";
     const VALID_GRADES = ['O', 'A+', 'A', 'B+', 'B', 'C', 'P', 'F', 'AB'];
@@ -1091,6 +1166,8 @@
       progressPercent: document.getElementById('progressPercent'),
       tableSuccessNotice: document.getElementById('tableSuccessNotice'),
       floatingStatus: document.getElementById('floatingStatus'),
+      finalSuccessModal: document.getElementById('finalSuccessModal'),
+      finalSuccessMessage: document.getElementById('finalSuccessMessage'),
       studentCount: document.getElementById('studentCount'),
       completedCount: document.getElementById('completedCount'),
       scaleMax: document.getElementById('scaleMax'),
@@ -1362,6 +1439,67 @@
       return index >= 0 ? controls[index + 1] : null;
     }
 
+    function firstEntryControlForRow(rowIndex) {
+      const row = document.querySelector(`tr[data-row="${rowIndex}"]`);
+      if (!row) return null;
+      const mode = getMode();
+
+      if (mode.hasTheory) {
+        const mid1 = row.querySelector('[data-field="mid1"]');
+        if (isActuallyVisible(mid1)) return mid1;
+      }
+
+      if (mode.hasPractical) {
+        const practical = row.querySelector('[data-field="practicalMarks"]');
+        if (isActuallyVisible(practical)) return practical;
+      }
+
+      return null;
+    }
+
+    function nextRowFirstEntryControl(rowIndex) {
+      return firstEntryControlForRow(rowIndex + 1);
+    }
+
+    function smoothScrollElementIntoView(target) {
+      if (!target) return;
+
+      const wrap = target.closest('.marks-wrap');
+      if (wrap) {
+        const wrapRect = wrap.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const stickyOffset = isMobileView() ? 150 : 276;
+        const targetLeft = wrap.scrollLeft + (targetRect.left - wrapRect.left) - stickyOffset;
+
+        wrap.scrollTo({
+          left: Math.max(0, targetLeft),
+          behavior: 'smooth'
+        });
+      }
+
+      target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+
+    function showPracticalResultThenNextRow(input, rowIndex) {
+      const row = input.closest('tr');
+      const resultCell = row ? row.querySelector('[data-result="practical"]') : null;
+      const nextFirst = nextRowFirstEntryControl(rowIndex);
+
+      if (resultCell) {
+        smoothScrollElementIntoView(resultCell);
+        resultCell.classList.add('result-flash');
+      }
+
+      window.setTimeout(() => {
+        if (resultCell) resultCell.classList.remove('result-flash');
+        if (nextFirst) {
+          smoothFocusControl(nextFirst);
+        } else {
+          input.blur();
+        }
+      }, isMobileView() ? 1050 : 650);
+    }
+
     function smoothFocusControl(control) {
       if (!control) return;
 
@@ -1445,6 +1583,68 @@
       if (notice) notice.style.display = 'none';
     }
 
+    function showFinalSuccessModal(message) {
+      if (el.finalSuccessMessage) {
+        el.finalSuccessMessage.textContent = message || 'The CIE marks have been submitted successfully.';
+      }
+      if (el.floatingStatus) el.floatingStatus.className = 'floating-status';
+      if (el.tableSuccessNotice) el.tableSuccessNotice.classList.remove('show');
+      if (el.finalSuccessModal) {
+        el.finalSuccessModal.classList.add('show');
+      }
+    }
+
+    function resetMarksFormAfterFinalSubmit() {
+      state.students = [];
+      state.existingMarks = {};
+      state.courseSettings = null;
+      state.activeInput = null;
+      state.isFinalLocked = false;
+
+      [el.academicYear, el.semester, el.programName, el.subjectName, el.paperCourseName].forEach(select => {
+        if (select) select.value = '';
+      });
+
+      if (el.facultyName) el.facultyName.value = '';
+      if (el.marksBody) el.marksBody.innerHTML = '';
+      if (el.marksCard) el.marksCard.style.display = 'none';
+      if (el.tableSuccessNotice) el.tableSuccessNotice.classList.remove('show');
+      if (el.floatingStatus) el.floatingStatus.className = 'floating-status';
+
+      if (el.studentCount) el.studentCount.textContent = '0';
+      if (el.completedCount) el.completedCount.textContent = '0';
+      if (el.progressPercent) el.progressPercent.textContent = '0%';
+      if (el.progressFill) el.progressFill.style.width = '0%';
+
+      const saveBtn = document.getElementById('saveInternalBtn');
+      const finalBtn = document.getElementById('finalSubmitBtn');
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Internal Marks';
+      }
+      if (finalBtn) {
+        finalBtn.disabled = false;
+        finalBtn.textContent = 'Final Submit';
+      }
+
+      showNotice(el.marksNotice, 'info', 'Form reset successfully. Select paper details for the next entry.');
+    }
+
+    async function closeFinalSuccessModal() {
+      if (el.finalSuccessModal) {
+        el.finalSuccessModal.classList.remove('show');
+      }
+      resetMarksFormAfterFinalSubmit();
+
+      try {
+        await loadFilters('marks');
+      } catch (err) {
+        showNotice(el.marksNotice, 'error', err.message || String(err));
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function scrollToFirstStudentAfterLoad() {
       if (!isMobileView()) return;
 
@@ -1503,6 +1703,19 @@
 
       if (!ok) return;
 
+      const mode = getMode();
+      const field = input.dataset.field || '';
+
+      // Theory + Practical: after Practical Marks, show Practical Result briefly,
+      // then smoothly move to next row first entry field.
+      if (field === 'practicalMarks' && mode.hasTheory && mode.hasPractical && input.value && isMobileView()) {
+        window.clearTimeout(input._moveTimer);
+        input._moveTimer = window.setTimeout(() => {
+          showPracticalResultThenNextRow(input, rowIndex);
+        }, 420);
+        return;
+      }
+
       if (shouldAutoMoveFromInput(input)) {
         window.clearTimeout(input._moveTimer);
         input._moveTimer = window.setTimeout(() => {
@@ -1523,13 +1736,25 @@
       const rowIndex = Number(select.closest('tr').dataset.row);
       updateRow(rowIndex);
 
-      // After manual SEE grade selection, move to Practical Marks only when the paper has practical.
       const mode = getMode();
+
+      if (!isMobileView()) return;
+
+      // Theory + Practical: after SEE grade, go smoothly to Practical Marks.
       if (mode.hasPractical) {
         const practical = select.closest('tr').querySelector('[data-field="practicalMarks"]');
-        if (practical && isMobileView()) {
-          setTimeout(() => smoothFocusControl(practical), 160);
+        if (practical) {
+          setTimeout(() => smoothFocusControl(practical), 180);
         }
+        return;
+      }
+
+      // Theory-only: after manual SEE grade selection, move to next row first entry field.
+      const nextFirst = nextRowFirstEntryControl(rowIndex);
+      if (nextFirst) {
+        setTimeout(() => smoothFocusControl(nextFirst), 260);
+      } else {
+        select.blur();
       }
     }
 
@@ -1985,18 +2210,23 @@
 
     async function finalSubmit() {
       const btn = document.getElementById('finalSubmitBtn');
+      const saveBtn = document.getElementById('saveInternalBtn');
+
       try {
         validateBeforeSave('Final Submitted');
         setBusy(btn, true, 'Submitting...');
         showActionStatus('info', 'Final submitting marks. Please wait...');
-        const result = await savePayloadChunked(buildPayload('Final Submitted'));
-        showActionStatus('success', result.message || 'Final submitted successfully. Marks are locked.', 7000);
 
-        // Do not hide the marks card immediately; otherwise faculty cannot see the success message.
-        document.querySelectorAll('#marksBody input, #marksBody select').forEach(item => item.disabled = true);
-        const saveBtn = document.getElementById('saveInternalBtn');
+        const result = await savePayloadChunked(buildPayload('Final Submitted'));
+
+        // Restore button text immediately so it does not remain as "Submitting...".
+        setBusy(btn, false);
         if (saveBtn) saveBtn.disabled = true;
         if (btn) btn.disabled = true;
+
+        document.querySelectorAll('#marksBody input, #marksBody select').forEach(item => item.disabled = true);
+
+        showFinalSuccessModal(result.message || 'Final submit completed successfully. The form will reset after closing this message.');
       } catch (err) {
         showActionStatus('error', err.message || String(err));
         setBusy(btn, false);
@@ -2145,6 +2375,7 @@
     window.loadStudents = loadStudents;
     window.saveInternal = saveInternal;
     window.finalSubmit = finalSubmit;
+    window.closeFinalSuccessModal = closeFinalSuccessModal;
     window.downloadReport = downloadReport;
     window.loadDashboard = loadDashboard;
 
