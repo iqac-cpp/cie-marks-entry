@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V82 - Reset Selection Button</title>
+  <title>CIE Mobile-First Portal V83 - Clear Table Warning</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -357,6 +357,11 @@
       color: var(--success);
       font-size: 30px;
       font-weight: 900;
+    }
+
+    .modal-icon.warning-icon {
+      background: #fff3cd;
+      color: #b7791f;
     }
 
     .modal-title {
@@ -1079,7 +1084,7 @@
           <div class="action-row">
             <button id="saveInternalBtn" class="btn warning" type="button" onclick="saveInternal()">Save Internal Marks</button>
             <button id="finalSubmitBtn" class="btn success" type="button" onclick="finalSubmit()">Final Submit</button>
-            <button id="resetSelectionBottomBtn" class="btn" type="button" onclick="resetPaperSelection()">Reset / Change Paper</button>
+            <button id="resetSelectionBottomBtn" class="btn" type="button" onclick="showClearTableConfirm()">Clear Table Data</button>
           </div>
         </div>
       </section>
@@ -1141,6 +1146,20 @@
     </div>
   </div>
 
+  <div id="clearTableConfirmModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="clearTableTitle">
+    <div class="modal-card">
+      <div class="modal-icon warning-icon">!</div>
+      <h2 id="clearTableTitle" class="modal-title">Clear Table Data?</h2>
+      <div class="modal-message">
+        This will clear all entered marks, SEE grades, practical marks and remarks in the current table. Paper selection and loaded students will remain same.
+      </div>
+      <div class="action-row">
+        <button class="btn warning" type="button" onclick="confirmClearTableData()">Yes, Clear Table</button>
+        <button class="btn" type="button" onclick="closeClearTableConfirm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbwKSjV6K7wTSqcY1VCnE1szl1PDc9OFHb4fxgwkCTpIp-Ycovmg56qVLXjiNk9T6T0G/exec";
     const VALID_GRADES = ['O', 'A+', 'A', 'B+', 'B', 'C', 'P', 'F', 'AB'];
@@ -1175,6 +1194,7 @@
       floatingStatus: document.getElementById('floatingStatus'),
       finalSuccessModal: document.getElementById('finalSuccessModal'),
       finalSuccessMessage: document.getElementById('finalSuccessMessage'),
+      clearTableConfirmModal: document.getElementById('clearTableConfirmModal'),
       studentCount: document.getElementById('studentCount'),
       completedCount: document.getElementById('completedCount'),
       scaleMax: document.getElementById('scaleMax'),
@@ -1637,6 +1657,69 @@
       }
 
       showNotice(el.marksNotice, 'info', 'Form reset successfully. Select paper details for the next entry.');
+    }
+
+    function showClearTableConfirm() {
+      if (!state.students.length || !el.marksBody || !el.marksBody.children.length) {
+        showNotice(el.marksNotice, 'error', 'Please load students first.');
+        return;
+      }
+
+      if (el.clearTableConfirmModal) {
+        el.clearTableConfirmModal.classList.add('show');
+      } else if (window.confirm('Clear all filled marks in this table?')) {
+        confirmClearTableData();
+      }
+    }
+
+    function closeClearTableConfirm() {
+      if (el.clearTableConfirmModal) {
+        el.clearTableConfirmModal.classList.remove('show');
+      }
+    }
+
+    function clearMarksTableValues() {
+      document.querySelectorAll('#marksBody input, #marksBody select').forEach(item => {
+        item.disabled = false;
+        item.classList.remove('input-error', 'awaiting-manual-select');
+
+        if (item.tagName === 'SELECT') {
+          item.value = '';
+        } else {
+          item.value = '';
+        }
+      });
+
+      document.querySelectorAll('#marksBody tr').forEach((row, index) => {
+        updateRow(index);
+      });
+
+      updateCompletedCount();
+
+      const saveBtn = document.getElementById('saveInternalBtn');
+      const finalBtn = document.getElementById('finalSubmitBtn');
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Internal Marks';
+      }
+      if (finalBtn) {
+        finalBtn.disabled = false;
+        finalBtn.textContent = 'Final Submit';
+      }
+
+      if (el.tableSuccessNotice) el.tableSuccessNotice.classList.remove('show');
+      if (el.floatingStatus) el.floatingStatus.className = 'floating-status';
+    }
+
+    function confirmClearTableData() {
+      closeClearTableConfirm();
+      clearMarksTableValues();
+      showActionStatus('success', 'Table data cleared. You can enter marks again.', 3500);
+
+      const first = firstEntryControlForRow(0);
+      if (first && isMobileView()) {
+        setTimeout(() => smoothFocusControl(first), 250);
+      }
     }
 
     async function resetPaperSelection() {
@@ -2452,6 +2535,9 @@
     window.saveInternal = saveInternal;
     window.finalSubmit = finalSubmit;
     window.resetPaperSelection = resetPaperSelection;
+    window.showClearTableConfirm = showClearTableConfirm;
+    window.closeClearTableConfirm = closeClearTableConfirm;
+    window.confirmClearTableData = confirmClearTableData;
     window.closeFinalSuccessModal = closeFinalSuccessModal;
     window.downloadReport = downloadReport;
     window.loadDashboard = loadDashboard;
