@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V72 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V73 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -47,7 +47,7 @@
       position: sticky;
       top: 0;
       z-index: 20;
-      padding: max(14px, env(safe-area-inset-top)) 14px 12px;
+      padding: max(8px, env(safe-area-inset-top)) 12px 8px;
       background: rgba(243, 247, 255, 0.92);
       backdrop-filter: blur(16px);
       border-bottom: 1px solid rgba(216, 227, 243, 0.8);
@@ -55,22 +55,22 @@
 
     .header-card {
       background: linear-gradient(135deg, var(--primary), var(--primary-2));
-      border-radius: 22px;
-      padding: 16px;
+      border-radius: 18px;
+      padding: 12px 14px;
       color: #fff;
-      box-shadow: 0 14px 30px rgba(18, 60, 124, 0.22);
+      box-shadow: 0 10px 24px rgba(18, 60, 124, 0.18);
     }
 
     .college-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 7px 12px;
+      padding: 5px 10px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.16);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
-      margin-bottom: 10px;
+      margin-bottom: 7px;
     }
 
     .header-card h1 {
@@ -347,8 +347,8 @@
     .reg { display: block; margin-top: 3px; font-size: 11px; color: var(--muted); font-weight: 700; }
 
     .mark-input, .grade-select {
-      width: 64px;
-      height: 44px;
+      width: 56px;
+      height: 42px;
       border: 1px solid #cbd9ee;
       border-radius: 12px;
       text-align: center;
@@ -493,6 +493,38 @@
       border-radius: 2px;
     }
 
+
+    /* V73: compact, even theory marks columns */
+    table.excel-grid th:nth-child(3),
+    table.excel-grid th:nth-child(4),
+    table.excel-grid th:nth-child(5),
+    table.excel-grid th:nth-child(6),
+    table.excel-grid th:nth-child(7),
+    table.excel-grid th:nth-child(8),
+    table.excel-grid th:nth-child(9),
+    table.excel-grid th:nth-child(10),
+    table.excel-grid td:nth-child(3),
+    table.excel-grid td:nth-child(4),
+    table.excel-grid td:nth-child(5),
+    table.excel-grid td:nth-child(6),
+    table.excel-grid td:nth-child(7),
+    table.excel-grid td:nth-child(8),
+    table.excel-grid td:nth-child(9),
+    table.excel-grid td:nth-child(10) {
+      width: 58px;
+      min-width: 58px;
+      max-width: 58px;
+    }
+
+    table.excel-grid td:nth-child(3) .mark-input,
+    table.excel-grid td:nth-child(4) .mark-input,
+    table.excel-grid td:nth-child(6) .mark-input,
+    table.excel-grid td:nth-child(7) .mark-input,
+    table.excel-grid td:nth-child(8) .mark-input {
+      width: 50px;
+      min-width: 50px;
+    }
+
     .bottom-nav
  {
       position: fixed;
@@ -609,6 +641,47 @@
         --bottom-nav-h: 70px;
       }
 
+
+      .app-header {
+        padding: max(6px, env(safe-area-inset-top)) 10px 6px;
+      }
+
+      .college-pill {
+        font-size: 11px;
+        padding: 4px 9px;
+        margin-bottom: 5px;
+      }
+
+      table.excel-grid th:nth-child(3),
+      table.excel-grid th:nth-child(4),
+      table.excel-grid th:nth-child(5),
+      table.excel-grid th:nth-child(6),
+      table.excel-grid th:nth-child(7),
+      table.excel-grid th:nth-child(8),
+      table.excel-grid th:nth-child(9),
+      table.excel-grid th:nth-child(10),
+      table.excel-grid td:nth-child(3),
+      table.excel-grid td:nth-child(4),
+      table.excel-grid td:nth-child(5),
+      table.excel-grid td:nth-child(6),
+      table.excel-grid td:nth-child(7),
+      table.excel-grid td:nth-child(8),
+      table.excel-grid td:nth-child(9),
+      table.excel-grid td:nth-child(10) {
+        width: 46px;
+        min-width: 46px;
+        max-width: 46px;
+      }
+
+      table.excel-grid td:nth-child(3) .mark-input,
+      table.excel-grid td:nth-child(4) .mark-input,
+      table.excel-grid td:nth-child(6) .mark-input,
+      table.excel-grid td:nth-child(7) .mark-input,
+      table.excel-grid td:nth-child(8) .mark-input {
+        width: 42px;
+        min-width: 42px;
+      }
+
       .container {
         padding: 10px;
       }
@@ -626,10 +699,6 @@
         font-size: 22px;
       }
 
-      .header-card p {
-        font-size: 13px;
-      }
-
       .action-row .btn {
         width: 100%;
       }
@@ -639,7 +708,7 @@
       }
 
       table.excel-grid {
-        min-width: 920px;
+        min-width: 820px;
         font-size: 12px;
       }
 
@@ -755,8 +824,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V72 keeps the progress bar sticky below the header during mobile marks entry.</p>
-      </div>
+</div>
     </header>
 
     <nav class="bottom-nav" aria-label="Main navigation">
@@ -803,7 +871,7 @@
           <div class="progress-panel" id="marksProgressCard">
           <div class="progress-head">
             <div>
-              <div class="progress-title">Entry Progress</div>
+              <div class="progress-title">Marks Entry Progress</div>
               <div class="progress-subtitle"><span id="completedCount">0</span> of <span id="studentCount">0</span> students completed</div>
             </div>
             <div class="progress-percent" id="progressPercent">0%</div>
