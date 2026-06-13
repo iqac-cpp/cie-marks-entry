@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V71 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V72 - GDC Cheepurupalli</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -733,6 +733,18 @@
       #marksBody tr:first-child .sticky-name {
         scroll-margin-top: 112px;
       }
+
+      .progress-panel {
+        position: sticky;
+        top: var(--sticky-progress-top, 112px);
+        z-index: 19;
+        margin: 6px 0 8px;
+        box-shadow: 0 6px 18px rgba(20, 50, 90, 0.14);
+      }
+
+      .progress-panel .progress-meta {
+        display: none;
+      }
     }
 
   </style>
@@ -743,7 +755,7 @@
       <div class="header-card">
         <div class="college-pill">🎓 GDC Cheepurupalli</div>
         <h1>CIE Marks Entry Portal</h1>
-        <p>Mobile-first frontend connected to Apps Script backend. V71 smoothly aligns the success message below the header after students load.</p>
+        <p>Mobile-first frontend connected to Apps Script backend. V72 keeps the progress bar sticky below the header during mobile marks entry.</p>
       </div>
     </header>
 
@@ -1023,6 +1035,12 @@
       return window.matchMedia('(max-width: 760px)').matches;
     }
 
+    function updateStickyProgressTop() {
+      const header = document.querySelector('.app-header');
+      const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 104;
+      document.documentElement.style.setProperty('--sticky-progress-top', (headerHeight + 6) + 'px');
+    }
+
     function validateMarkInput(input, showMessageFlag = true) {
       if (!input) return true;
       const field = input.dataset.field || '';
@@ -1154,6 +1172,8 @@
 
     function scrollToFirstStudentAfterLoad() {
       if (!isMobileView()) return;
+
+      updateStickyProgressTop();
 
       const successBox = el.tableSuccessNotice || document.getElementById('tableSuccessNotice');
       const firstInput = document.querySelector('#marksBody tr:first-child [data-field="mid1"], #marksBody tr:first-child [data-field="practicalMarks"]');
@@ -1829,6 +1849,10 @@
 
     async function init() {
       wireFilters();
+      updateStickyProgressTop();
+      window.addEventListener('resize', updateStickyProgressTop);
+      window.addEventListener('orientationchange', () => setTimeout(updateStickyProgressTop, 250));
+
       try {
         await loadFilters('marks');
         showNotice(el.marksNotice, 'info', 'Dropdowns loaded. Select paper details and load students.');
