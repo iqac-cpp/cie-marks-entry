@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V75 - GDC Cheepurupalli</title>
+  <title>CIE Mobile-First Portal V76 - Save Button Feedback Fix</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -260,6 +260,64 @@
 
     .table-success.show {
       display: block;
+    }
+
+    .table-success.info {
+      background: #eaf2ff;
+      border-color: #cfe0f6;
+      color: var(--primary);
+    }
+
+    .table-success.error {
+      background: #fff1f1;
+      border-color: #ffd0d0;
+      color: var(--danger);
+    }
+
+    .table-success.success {
+      background: #e8f7ed;
+      border-color: #c7ead2;
+      color: var(--success);
+    }
+
+    .floating-status {
+      display: none;
+      position: fixed;
+      top: var(--floating-status-top, 96px);
+      left: 12px;
+      right: 12px;
+      z-index: 60;
+      padding: 11px 13px;
+      border-radius: 14px;
+      border: 1px solid #cfe0f6;
+      background: #eaf2ff;
+      color: var(--primary);
+      box-shadow: 0 10px 28px rgba(20, 50, 90, 0.18);
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+
+    .floating-status.show {
+      display: block;
+    }
+
+    .floating-status.success {
+      background: #e8f7ed;
+      border-color: #c7ead2;
+      color: var(--success);
+    }
+
+    .floating-status.error {
+      background: #fff1f1;
+      border-color: #ffd0d0;
+      color: var(--danger);
+    }
+
+    .floating-status.info {
+      background: #eaf2ff;
+      border-color: #cfe0f6;
+      color: var(--primary);
     }
 
     .table-tools {
@@ -859,6 +917,8 @@
 </div>
     </header>
 
+    <div id="floatingStatus" class="floating-status" role="status" aria-live="polite"></div>
+
     <nav class="bottom-nav" aria-label="Main navigation">
       <button class="nav-btn active" type="button" data-screen="marks"><span class="icon">✍️</span><span>Marks</span></button>
       <button class="nav-btn" type="button" data-screen="reports"><span class="icon">📄</span><span>Reports</span></button>
@@ -1030,6 +1090,7 @@
       progressFill: document.getElementById('progressFill'),
       progressPercent: document.getElementById('progressPercent'),
       tableSuccessNotice: document.getElementById('tableSuccessNotice'),
+      floatingStatus: document.getElementById('floatingStatus'),
       studentCount: document.getElementById('studentCount'),
       completedCount: document.getElementById('completedCount'),
       scaleMax: document.getElementById('scaleMax'),
@@ -1103,6 +1164,8 @@
     }
 
     function showNotice(box, type, message) {
+      if (!box) return;
+      box.style.display = '';
       box.className = 'notice ' + type + ' show';
       box.innerHTML = message;
     }
@@ -1145,6 +1208,7 @@
       const bottomHeight = bottomNav ? Math.ceil(bottomNav.getBoundingClientRect().height) : 78;
 
       document.documentElement.style.setProperty('--sticky-progress-top', (headerHeight + 6) + 'px');
+      document.documentElement.style.setProperty('--floating-status-top', (headerHeight + 8) + 'px');
 
       // V75: table header now freezes inside the scrollable marks table at top:0.
       // This prevents the header row from appearing in the middle of student rows.
@@ -1266,14 +1330,30 @@
       }, isMobileView() ? 300 : 80);
     }
 
-    function showTableSuccessMessage(message) {
+    function showTableSuccessMessage(message, type = 'success') {
       if (!el.tableSuccessNotice) return;
       el.tableSuccessNotice.textContent = message;
-      el.tableSuccessNotice.classList.add('show');
+      el.tableSuccessNotice.className = 'table-success show ' + type;
+    }
+
+    function showActionStatus(type, message, autoHideMs = 0) {
+      showTableSuccessMessage(message, type);
+
+      if (el.floatingStatus) {
+        el.floatingStatus.innerHTML = message;
+        el.floatingStatus.className = 'floating-status show ' + type;
+
+        window.clearTimeout(el.floatingStatus._hideTimer);
+        if (autoHideMs) {
+          el.floatingStatus._hideTimer = window.setTimeout(() => {
+            el.floatingStatus.className = 'floating-status';
+          }, autoHideMs);
+        }
+      }
     }
 
     function prepareLoadedMobileView(message) {
-      showTableSuccessMessage(message);
+      showTableSuccessMessage(message, 'success');
 
       // Success message is shown inside the marks table card.
       // Hide the top notice in both desktop and mobile to avoid duplicate messages.
@@ -1470,6 +1550,7 @@
         if (el.marksProgressCard) el.marksProgressCard.style.display = '';
         if (el.marksNotice) el.marksNotice.style.display = '';
         if (el.tableSuccessNotice) el.tableSuccessNotice.classList.remove('show');
+        if (el.floatingStatus) el.floatingStatus.className = 'floating-status';
       }
       if (isReport) {
         showNotice(el.reportNotice, 'info', 'Loading dropdown data from Sheets...');
@@ -1804,33 +1885,37 @@
     }
 
     async function saveInternal() {
+      const btn = document.getElementById('saveInternalBtn');
       try {
         validateBeforeSave('Internal Saved');
-        const btn = document.getElementById('saveInternalBtn');
         setBusy(btn, true, 'Saving...');
-        showNotice(el.marksNotice, 'info', 'Saving internal marks to backend...');
+        showActionStatus('info', 'Saving internal marks. Please wait...');
         const result = await savePayloadChunked(buildPayload('Internal Saved'));
-        showNotice(el.marksNotice, 'success', result.message || 'Internal marks saved successfully.');
+        showActionStatus('success', result.message || 'Internal marks saved successfully.', 4500);
       } catch (err) {
-        showNotice(el.marksNotice, 'error', err.message || String(err));
+        showActionStatus('error', err.message || String(err));
       } finally {
-        setBusy(document.getElementById('saveInternalBtn'), false);
+        setBusy(btn, false);
       }
     }
 
     async function finalSubmit() {
+      const btn = document.getElementById('finalSubmitBtn');
       try {
         validateBeforeSave('Final Submitted');
-        const btn = document.getElementById('finalSubmitBtn');
         setBusy(btn, true, 'Submitting...');
-        showNotice(el.marksNotice, 'info', 'Final submitting marks to backend...');
+        showActionStatus('info', 'Final submitting marks. Please wait...');
         const result = await savePayloadChunked(buildPayload('Final Submitted'));
-        showNotice(el.marksNotice, 'success', result.message || 'Final submitted successfully.');
-        el.marksCard.style.display = 'none';
+        showActionStatus('success', result.message || 'Final submitted successfully. Marks are locked.', 6000);
+
+        // Do not hide the marks card immediately; otherwise faculty cannot see the success message.
+        document.querySelectorAll('#marksBody input, #marksBody select').forEach(item => item.disabled = true);
+        const saveBtn = document.getElementById('saveInternalBtn');
+        if (saveBtn) saveBtn.disabled = true;
+        if (btn) btn.disabled = true;
       } catch (err) {
-        showNotice(el.marksNotice, 'error', err.message || String(err));
-      } finally {
-        setBusy(document.getElementById('finalSubmitBtn'), false);
+        showActionStatus('error', err.message || String(err));
+        setBusy(btn, false);
       }
     }
 
@@ -1972,6 +2057,12 @@
         showNotice(el.marksNotice, 'error', err.message || String(err));
       }
     }
+
+    window.loadStudents = loadStudents;
+    window.saveInternal = saveInternal;
+    window.finalSubmit = finalSubmit;
+    window.downloadReport = downloadReport;
+    window.loadDashboard = loadDashboard;
 
     init();
   </script>
