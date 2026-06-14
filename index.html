@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.5 - Sticky Marks Header</title>
+  <title>CIE Mobile-First Portal V88.2.6 - Header Stable During Entry</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1041,6 +1041,43 @@
     }
 
 
+
+    /* V88.2.6: keep marks header stable below progress bar during mobile entry */
+    #marksCard .mark-input:focus,
+    #marksCard .grade-select:focus,
+    #marksCard .remark-input:focus {
+      outline: 3px solid rgba(31, 91, 181, 0.30);
+      box-shadow: 0 0 0 4px rgba(31, 91, 181, 0.12);
+      background: #ffffff;
+    }
+
+    @media (max-width: 480px) {
+      #marksCard .marks-wrap {
+        height: calc(100svh - var(--marks-table-offset, 330px));
+        min-height: 245px;
+        max-height: 430px;
+        overflow: auto;
+        overscroll-behavior: contain;
+        scroll-padding-top: 58px;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #marksCard table.excel-grid thead th {
+        position: sticky;
+        top: 0;
+        z-index: 80;
+        background: #e8f1ff;
+        box-shadow: 0 2px 0 #c7d3e4, 0 8px 14px rgba(20, 50, 90, 0.12);
+      }
+
+      #marksCard table.excel-grid thead th.sticky-col,
+      #marksCard table.excel-grid thead th.sticky-name {
+        z-index: 90;
+        background: #dceaff;
+      }
+    }
+
+
   </style>
 </head>
 <body>
@@ -1682,10 +1719,46 @@
       return firstEntryControlForRow(rowIndex + 1);
     }
 
+    function keepMarksHeaderStableForControl(control) {
+      if (!control) return;
+
+      const wrap = control.closest('.marks-wrap');
+      if (!wrap) return;
+
+      const cell = control.closest('td,th') || control;
+      const wrapRect = wrap.getBoundingClientRect();
+      const cellRect = cell.getBoundingClientRect();
+
+      // Horizontal movement: keep the active marks cell after frozen S.No + Student columns.
+      const stickyOffset = isMobileView() ? 150 : 276;
+      const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
+      wrap.scrollLeft = Math.max(0, targetLeft);
+
+      // Vertical movement: scroll only inside the marks table, not the full page.
+      // This keeps the progress bar and header in the same stable position.
+      if (isMobileView()) {
+        const headerSpace = 58;
+        const bottomSpace = 108;
+        const topInside = cellRect.top - wrapRect.top;
+        const bottomInside = cellRect.bottom - wrapRect.top;
+
+        if (topInside < headerSpace) {
+          wrap.scrollTop = Math.max(0, wrap.scrollTop - (headerSpace - topInside) - 6);
+        } else if (bottomInside > wrap.clientHeight - bottomSpace) {
+          wrap.scrollTop = wrap.scrollTop + (bottomInside - (wrap.clientHeight - bottomSpace)) + 8;
+        }
+      }
+    }
+
     function smoothScrollElementIntoView(target) {
       if (!target) return;
 
       const wrap = target.closest('.marks-wrap');
+      if (wrap && isMobileView()) {
+        keepMarksHeaderStableForControl(target);
+        return;
+      }
+
       if (wrap) {
         const wrapRect = wrap.getBoundingClientRect();
         const targetRect = target.getBoundingClientRect();
@@ -1732,45 +1805,50 @@
       const field = control.dataset ? control.dataset.field : '';
 
       if (wrap) {
-        const wrapRect = wrap.getBoundingClientRect();
-        const cell = control.closest('td,th');
-        const cellRect = cell ? cell.getBoundingClientRect() : control.getBoundingClientRect();
-
-        let targetLeft;
-
-        if (isMobileView() && field === 'mid1') {
-          // V65: after Practical Marks, the next row should clearly show Mid-1.
-          // Reset horizontal scroll to the first marks area instead of leaving the table at the far-right practical area.
-          targetLeft = 0;
+        if (isMobileView()) {
+          if (field === 'mid1') {
+            wrap.scrollLeft = 0;
+          } else {
+            keepMarksHeaderStableForControl(control);
+          }
         } else {
-          // Keep target cell just after frozen S.No + Student Name columns.
-          const stickyOffset = isMobileView() ? 150 : 276;
-          targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
+          const wrapRect = wrap.getBoundingClientRect();
+          const cell = control.closest('td,th');
+          const cellRect = cell ? cell.getBoundingClientRect() : control.getBoundingClientRect();
+          const stickyOffset = 276;
+          const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
+          wrap.scrollTo({
+            left: Math.max(0, targetLeft),
+            behavior: 'smooth'
+          });
+          control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
         }
-
-        wrap.scrollTo({
-          left: Math.max(0, targetLeft),
-          behavior: 'smooth'
-        });
+      } else {
+        control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
       }
-
-      control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
 
       setTimeout(() => {
         if (control.tagName === 'SELECT' && isMobileView()) {
-          // Do not focus/click mobile dropdown. Just stop at it and highlight.
+          // Do not open mobile dropdown automatically. Keep header/progress stable and highlight it.
+          keepMarksHeaderStableForControl(control);
           control.classList.add('awaiting-manual-select');
           return;
         }
 
         control.focus({ preventScroll: true });
 
+        if (isMobileView()) {
+          keepMarksHeaderStableForControl(control);
+          setTimeout(() => keepMarksHeaderStableForControl(control), 120);
+          setTimeout(() => keepMarksHeaderStableForControl(control), 360);
+        }
+
         // V65 safety: if the target is Mid-1 on mobile, keep the horizontal
         // position at the first marks area even after focus/keyboard changes.
         if (wrap && isMobileView() && field === 'mid1') {
           setTimeout(() => wrap.scrollTo({ left: 0, behavior: 'smooth' }), 80);
         }
-      }, isMobileView() ? 300 : 80);
+      }, isMobileView() ? 160 : 80);
     }
 
     function showTableSuccessMessage(message, type = 'success') {
@@ -2129,6 +2207,7 @@
                 const len = practical.value.length;
                 practical.setSelectionRange(len, len);
               }
+              keepMarksHeaderStableForControl(practical);
             } catch (err) {}
             setTimeout(() => smoothFocusControl(practical), 70);
           } else {
@@ -2418,8 +2497,13 @@
       document.querySelectorAll('.mark-input').forEach(input => {
         input.addEventListener('focus', () => {
           state.activeInput = input;
+          keepMarksHeaderStableForControl(input);
+          setTimeout(() => keepMarksHeaderStableForControl(input), 220);
         });
-        input.addEventListener('input', () => handleMarkInput(input));
+        input.addEventListener('input', () => {
+          keepMarksHeaderStableForControl(input);
+          handleMarkInput(input);
+        });
         input.addEventListener('keydown', event => {
           if (event.key === 'Enter') {
             event.preventDefault();
