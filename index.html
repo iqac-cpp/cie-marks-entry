@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V87 - AB Hint Removed</title>
+  <title>CIE Mobile-First Portal V88 - Dashboard Filters</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -172,6 +172,18 @@
     .btn:disabled { opacity: 0.48; cursor: not-allowed; box-shadow: none; }
 
     .summary-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    .dashboard-filter-box {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #f8fbff;
+    }
+
+    .dashboard-filters {
+      margin-top: 10px;
+    }
     .stat {
       background: #f8fbff;
       border: 1px solid var(--border);
@@ -1130,6 +1142,21 @@
             <div class="stat"><div class="num" id="dashInternal">0</div><div class="label">Internal Saved</div></div>
             <div class="stat"><div class="num" id="dashFinal">0</div><div class="label">Final Submitted</div></div>
           </div>
+
+          <div class="dashboard-filter-box">
+            <div class="hint">Default view shows all papers. Use filters only when required.</div>
+            <div class="form-grid dashboard-filters">
+              <div class="field"><label>Academic Year</label><select id="dashAcademicYear"></select></div>
+              <div class="field"><label>Semester</label><select id="dashSemester"></select></div>
+              <div class="field"><label>Course Name</label><select id="dashProgramName"></select></div>
+              <div class="field"><label>Subject</label><select id="dashSubjectName"></select></div>
+              <div class="field"><label>Status</label><select id="dashStatus"></select></div>
+            </div>
+            <div class="action-row">
+              <button class="btn primary" type="button" onclick="applyDashboardFilters()">Apply Filter</button>
+              <button class="btn" type="button" onclick="resetDashboardFilters()">Show All</button>
+            </div>
+          </div>
         </div>
 
         <div id="dashboardList" class="status-list"></div>
@@ -1173,7 +1200,8 @@
       students: [],
       existingMarks: {},
       activeInput: null,
-      isFinalLocked: false
+      isFinalLocked: false,
+      dashboardRows: []
     };
 
     const el = {
@@ -1207,7 +1235,12 @@
       reportProgramName: document.getElementById('reportProgramName'),
       reportSubjectName: document.getElementById('reportSubjectName'),
       reportPaperCourseName: document.getElementById('reportPaperCourseName'),
-      reportNotice: document.getElementById('reportNotice')
+      reportNotice: document.getElementById('reportNotice'),
+      dashAcademicYear: document.getElementById('dashAcademicYear'),
+      dashSemester: document.getElementById('dashSemester'),
+      dashProgramName: document.getElementById('dashProgramName'),
+      dashSubjectName: document.getElementById('dashSubjectName'),
+      dashStatus: document.getElementById('dashStatus')
     };
 
     function jsonp(action, params = {}, timeoutMs = 45000) {
@@ -2493,34 +2526,142 @@
       }
     }
 
+    function sameDashValue(a, b) {
+      return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+    }
+
+    function naturalDashSort(a, b) {
+      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+    }
+
+    function dashOptionValues(rows, key) {
+      const seen = {};
+      const result = [];
+      (rows || []).forEach(row => {
+        const value = String(row[key] || '').trim();
+        if (!value) return;
+        const mapKey = value.toLowerCase();
+        if (!seen[mapKey]) {
+          seen[mapKey] = true;
+          result.push(value);
+        }
+      });
+      return result.sort(naturalDashSort);
+    }
+
+    function setDashboardOptions(select, values) {
+      if (!select) return;
+      const selected = select.value || '';
+      select.innerHTML = '<option value="">All</option>' + (values || []).map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      if ((values || []).some(v => sameDashValue(v, selected))) {
+        select.value = (values || []).find(v => sameDashValue(v, selected));
+      } else {
+        select.value = '';
+      }
+    }
+
+    function dashboardFilteredRows(level = 'all') {
+      const academicYear = el.dashAcademicYear ? el.dashAcademicYear.value : '';
+      const semester = el.dashSemester ? el.dashSemester.value : '';
+      const programName = el.dashProgramName ? el.dashProgramName.value : '';
+      const subjectName = el.dashSubjectName ? el.dashSubjectName.value : '';
+      const status = el.dashStatus ? el.dashStatus.value : '';
+
+      return (state.dashboardRows || []).filter(row => {
+        if (academicYear && !sameDashValue(row.academicYear, academicYear)) return false;
+        if (level === 'academicYear') return true;
+        if (semester && !sameDashValue(row.semester, semester)) return false;
+        if (level === 'semester') return true;
+        if (programName && !sameDashValue(row.programName, programName)) return false;
+        if (level === 'programName') return true;
+        if (subjectName && !sameDashValue(row.subjectName, subjectName)) return false;
+        if (level === 'subjectName') return true;
+        if (status && !sameDashValue(row.status, status)) return false;
+        return true;
+      });
+    }
+
+    function refreshDashboardFilterOptions(changedField = '') {
+      if (!state.dashboardRows.length) return;
+
+      if (changedField === 'academicYear') {
+        if (el.dashSemester) el.dashSemester.value = '';
+        if (el.dashProgramName) el.dashProgramName.value = '';
+        if (el.dashSubjectName) el.dashSubjectName.value = '';
+      } else if (changedField === 'semester') {
+        if (el.dashProgramName) el.dashProgramName.value = '';
+        if (el.dashSubjectName) el.dashSubjectName.value = '';
+      } else if (changedField === 'programName') {
+        if (el.dashSubjectName) el.dashSubjectName.value = '';
+      }
+
+      setDashboardOptions(el.dashAcademicYear, dashOptionValues(state.dashboardRows, 'academicYear'));
+      setDashboardOptions(el.dashSemester, dashOptionValues(dashboardFilteredRows('academicYear'), 'semester'));
+      setDashboardOptions(el.dashProgramName, dashOptionValues(dashboardFilteredRows('semester'), 'programName'));
+      setDashboardOptions(el.dashSubjectName, dashOptionValues(dashboardFilteredRows('programName'), 'subjectName'));
+      setDashboardOptions(el.dashStatus, dashOptionValues(dashboardFilteredRows('subjectName'), 'status'));
+    }
+
+    function makeDashboardSummaryFromRows(rows) {
+      const list = rows || [];
+      return {
+        totalPapers: list.length,
+        pending: list.filter(r => String(r.status || '').toLowerCase().includes('pending')).length,
+        internalSaved: list.filter(r => String(r.status || '').toLowerCase().includes('internal')).length,
+        finalSubmitted: list.filter(r => String(r.status || '').toLowerCase().includes('final')).length
+      };
+    }
+
+    function renderDashboardRows(rows) {
+      const s = makeDashboardSummaryFromRows(rows);
+      document.getElementById('dashTotal').textContent = s.totalPapers || 0;
+      document.getElementById('dashPending').textContent = s.pending || 0;
+      document.getElementById('dashInternal').textContent = s.internalSaved || 0;
+      document.getElementById('dashFinal').textContent = s.finalSubmitted || 0;
+
+      const list = rows || [];
+      document.getElementById('dashboardList').innerHTML = list.length ? list.map(row => {
+        const status = row.status || row.submissionStatus || 'Pending';
+        const cls = status.toLowerCase().includes('final') ? 'done' : (status.toLowerCase().includes('pending') ? 'pending' : 'partial');
+        return `<div class="status-card">
+          <div class="status-top">
+            <div>
+              <div class="paper-title">${escapeHtml(row.paperCourseName || row.paper || row.nameOfPaper || '')}</div>
+              <div class="hint">${escapeHtml(row.subjectName || row.subject || '')} · ${escapeHtml(row.programName || '')} · ${escapeHtml(row.semester || '')} · ${escapeHtml(row.facultyName || row.faculty || '')}</div>
+            </div>
+            <span class="status-pill ${cls}">${escapeHtml(status)}</span>
+          </div>
+          <div class="status-meta">
+            <div>Students: ${escapeHtml(row.totalStudents || row.studentCount || row.students || '')}</div>
+            <div>PDF: ${row.pdfUrl ? 'Generated' : 'Not generated'}</div>
+          </div>
+        </div>`;
+      }).join('') : '<div class="notice info show">No papers found for the selected filters.</div>';
+    }
+
+    function applyDashboardFilters() {
+      refreshDashboardFilterOptions();
+      renderDashboardRows(dashboardFilteredRows());
+    }
+
+    function resetDashboardFilters() {
+      [el.dashAcademicYear, el.dashSemester, el.dashProgramName, el.dashSubjectName, el.dashStatus].forEach(select => {
+        if (select) select.value = '';
+      });
+      refreshDashboardFilterOptions();
+      renderDashboardRows(state.dashboardRows || []);
+    }
+
     async function loadDashboard() {
       try {
+        document.getElementById('dashboardList').innerHTML = '<div class="notice info show">Loading dashboard...</div>';
         const data = await jsonp('getCieStatusDashboardData', {}, 60000);
         if (!data.success) throw new Error(data.message || 'Could not load dashboard');
-        const s = data.summary || {};
-        document.getElementById('dashTotal').textContent = s.totalPapers || 0;
-        document.getElementById('dashPending').textContent = s.pending || 0;
-        document.getElementById('dashInternal').textContent = s.internalSaved || 0;
-        document.getElementById('dashFinal').textContent = s.finalSubmitted || 0;
 
-        const rows = data.rows || data.dashboard || [];
-        document.getElementById('dashboardList').innerHTML = rows.map(row => {
-          const status = row.status || row.submissionStatus || 'Pending';
-          const cls = status.toLowerCase().includes('final') ? 'done' : (status.toLowerCase().includes('pending') ? 'pending' : 'partial');
-          return `<div class="status-card">
-            <div class="status-top">
-              <div>
-                <div class="paper-title">${escapeHtml(row.paperCourseName || row.paper || row.nameOfPaper || '')}</div>
-                <div class="hint">${escapeHtml(row.subjectName || row.subject || '')} · ${escapeHtml(row.semester || '')} · ${escapeHtml(row.facultyName || row.faculty || '')}</div>
-              </div>
-              <span class="status-pill ${cls}">${escapeHtml(status)}</span>
-            </div>
-            <div class="status-meta">
-              <div>Students: ${escapeHtml(row.studentCount || row.students || '')}</div>
-              <div>PDF: ${row.pdfUrl ? 'Generated' : 'Not generated'}</div>
-            </div>
-          </div>`;
-        }).join('');
+        state.dashboardRows = data.rows || data.dashboard || [];
+
+        refreshDashboardFilterOptions();
+        renderDashboardRows(dashboardFilteredRows());
       } catch (err) {
         document.getElementById('dashboardList').innerHTML = `<div class="notice error show">${escapeHtml(err.message || String(err))}</div>`;
       }
@@ -2572,6 +2713,20 @@
           try { await loadFilters('reports', field); } catch (err) { showNotice(el.reportNotice, 'error', err.message); }
         });
       });
+
+      [
+        [el.dashAcademicYear, 'academicYear'],
+        [el.dashSemester, 'semester'],
+        [el.dashProgramName, 'programName'],
+        [el.dashSubjectName, 'subjectName'],
+        [el.dashStatus, 'status']
+      ].forEach(([sel, field]) => {
+        if (!sel) return;
+        sel.addEventListener('change', () => {
+          refreshDashboardFilterOptions(field);
+          applyDashboardFilters();
+        });
+      });
     }
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -2611,6 +2766,8 @@
     window.closeFinalSuccessModal = closeFinalSuccessModal;
     window.downloadReport = downloadReport;
     window.loadDashboard = loadDashboard;
+    window.applyDashboardFilters = applyDashboardFilters;
+    window.resetDashboardFilters = resetDashboardFilters;
 
     init();
   </script>
