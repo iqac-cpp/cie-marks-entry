@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V86 - AB Internal and Result Formula</title>
+  <title>CIE Mobile-First Portal V87 - AB Hint Removed</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -2253,8 +2253,7 @@
       const allowAB = fieldAllowsAB(field);
       const mode = allowAB ? 'text' : 'numeric';
       const pattern = allowAB ? '[0-9AaBb]*' : '[0-9]*';
-      const placeholder = allowAB ? 'AB' : '';
-      return `<td class="${cellClass}"><input class="mark-input" inputmode="${mode}" pattern="${pattern}" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" ${allowAB ? 'data-allow-ab="true"' : ''} placeholder="${placeholder}" value="${escapeAttr(value)}"/></td>`;
+      return `<td class="${cellClass}"><input class="mark-input" inputmode="${mode}" pattern="${pattern}" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" ${allowAB ? 'data-allow-ab="true"' : ''} value="${escapeAttr(value)}"/></td>`;
     }
 
     function practicalInputCell(row, max, value = '') {
