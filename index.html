@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88 - Dashboard Filters</title>
+  <title>CIE Mobile-First Portal V89 - Result Analysis</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -184,6 +184,49 @@
     .dashboard-filters {
       margin-top: 10px;
     }
+
+    .analysis-filter-box {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #f8fbff;
+    }
+
+    .analysis-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      font-size: 13px;
+    }
+
+    .analysis-table th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 6px 8px;
+    }
+
+    .analysis-table td {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 8px;
+      font-weight: 800;
+    }
+
+    .analysis-table td:first-child {
+      border-left: 1px solid var(--border);
+      border-radius: 14px 0 0 14px;
+    }
+
+    .analysis-table td:last-child {
+      border-right: 1px solid var(--border);
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pass-text { color: var(--success); }
+    .fail-text { color: #dc2626; }
     .stat {
       background: #f8fbff;
       border: 1px solid var(--border);
@@ -700,7 +743,7 @@
       border-top: 1px solid var(--border);
       box-shadow: 0 -10px 26px rgba(20, 50, 90, 0.10);
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
 
@@ -1011,6 +1054,7 @@
       <button class="nav-btn active" type="button" data-screen="marks"><span class="icon">✍️</span><span>Marks</span></button>
       <button class="nav-btn" type="button" data-screen="reports"><span class="icon">📄</span><span>Reports</span></button>
       <button class="nav-btn" type="button" data-screen="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
+      <button class="nav-btn" type="button" data-screen="analysis"><span class="icon">📈</span><span>Analysis</span></button>
     </nav>
 
     <main class="container">
@@ -1161,6 +1205,48 @@
 
         <div id="dashboardList" class="status-list"></div>
       </section>
+
+      <section id="analysis" class="screen">
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h2>Result Analysis</h2>
+              <div class="hint">Final Submitted records only. Verify college-wise, group-wise and subject-wise result.</div>
+            </div>
+            <button class="btn" type="button" onclick="loadResultAnalysis()">Refresh</button>
+          </div>
+
+          <div class="summary-row">
+            <div class="stat"><div class="num" id="analysisTotal">0</div><div class="label">Final Records</div></div>
+            <div class="stat"><div class="num" id="analysisPass">0</div><div class="label">Pass</div></div>
+            <div class="stat"><div class="num" id="analysisFail">0</div><div class="label">Fail</div></div>
+            <div class="stat"><div class="num" id="analysisPassPercent">0%</div><div class="label">Pass %</div></div>
+          </div>
+
+          <div class="analysis-filter-box">
+            <div class="hint">Default view shows college-wise overall final result. Use filters for verification.</div>
+            <div class="form-grid dashboard-filters">
+              <div class="field"><label>Academic Year</label><select id="analysisAcademicYear"></select></div>
+              <div class="field"><label>Semester</label><select id="analysisSemester"></select></div>
+              <div class="field"><label>Course / Group</label><select id="analysisProgramName"></select></div>
+              <div class="field"><label>Subject</label><select id="analysisSubjectName"></select></div>
+              <div class="field"><label>Analysis Type</label>
+                <select id="analysisType">
+                  <option value="college">College-wise</option>
+                  <option value="group">Group-wise</option>
+                  <option value="subject">Subject-wise</option>
+                </select>
+              </div>
+            </div>
+            <div class="action-row">
+              <button class="btn primary" type="button" onclick="applyResultAnalysisFilters()">Apply Analysis</button>
+              <button class="btn" type="button" onclick="resetResultAnalysisFilters()">Show All</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="analysisList" class="status-list"></div>
+      </section>
     </main>
   </div>
 
@@ -1201,7 +1287,8 @@
       existingMarks: {},
       activeInput: null,
       isFinalLocked: false,
-      dashboardRows: []
+      dashboardRows: [],
+      analysisRows: []
     };
 
     const el = {
@@ -1240,7 +1327,12 @@
       dashSemester: document.getElementById('dashSemester'),
       dashProgramName: document.getElementById('dashProgramName'),
       dashSubjectName: document.getElementById('dashSubjectName'),
-      dashStatus: document.getElementById('dashStatus')
+      dashStatus: document.getElementById('dashStatus'),
+      analysisAcademicYear: document.getElementById('analysisAcademicYear'),
+      analysisSemester: document.getElementById('analysisSemester'),
+      analysisProgramName: document.getElementById('analysisProgramName'),
+      analysisSubjectName: document.getElementById('analysisSubjectName'),
+      analysisType: document.getElementById('analysisType')
     };
 
     function jsonp(action, params = {}, timeoutMs = 45000) {
@@ -2667,6 +2759,172 @@
       }
     }
 
+    function resultAnalysisFilteredRows(level = 'all') {
+      const academicYear = el.analysisAcademicYear ? el.analysisAcademicYear.value : '';
+      const semester = el.analysisSemester ? el.analysisSemester.value : '';
+      const programName = el.analysisProgramName ? el.analysisProgramName.value : '';
+      const subjectName = el.analysisSubjectName ? el.analysisSubjectName.value : '';
+
+      return (state.analysisRows || []).filter(row => {
+        if (academicYear && !sameDashValue(row.academicYear, academicYear)) return false;
+        if (level === 'academicYear') return true;
+        if (semester && !sameDashValue(row.semester, semester)) return false;
+        if (level === 'semester') return true;
+        if (programName && !sameDashValue(row.programName, programName)) return false;
+        if (level === 'programName') return true;
+        if (subjectName && !sameDashValue(row.subjectName, subjectName)) return false;
+        return true;
+      });
+    }
+
+    function refreshResultAnalysisOptions(changedField = '') {
+      if (!state.analysisRows.length) return;
+
+      if (changedField === 'academicYear') {
+        if (el.analysisSemester) el.analysisSemester.value = '';
+        if (el.analysisProgramName) el.analysisProgramName.value = '';
+        if (el.analysisSubjectName) el.analysisSubjectName.value = '';
+      } else if (changedField === 'semester') {
+        if (el.analysisProgramName) el.analysisProgramName.value = '';
+        if (el.analysisSubjectName) el.analysisSubjectName.value = '';
+      } else if (changedField === 'programName') {
+        if (el.analysisSubjectName) el.analysisSubjectName.value = '';
+      }
+
+      setDashboardOptions(el.analysisAcademicYear, dashOptionValues(state.analysisRows, 'academicYear'));
+      setDashboardOptions(el.analysisSemester, dashOptionValues(resultAnalysisFilteredRows('academicYear'), 'semester'));
+      setDashboardOptions(el.analysisProgramName, dashOptionValues(resultAnalysisFilteredRows('semester'), 'programName'));
+      setDashboardOptions(el.analysisSubjectName, dashOptionValues(resultAnalysisFilteredRows('programName'), 'subjectName'));
+    }
+
+    function makeResultSummary(rows) {
+      const list = rows || [];
+      const pass = list.filter(r => String(r.overallResult || '').toUpperCase() === 'P').length;
+      const fail = list.filter(r => String(r.overallResult || '').toUpperCase() === 'F').length;
+      const total = pass + fail;
+      return {
+        total: total,
+        pass: pass,
+        fail: fail,
+        passPercent: total ? Math.round((pass / total) * 100) : 0
+      };
+    }
+
+    function aggregateResultRows(rows, type) {
+      const list = rows || [];
+      const map = {};
+
+      list.forEach(row => {
+        let key;
+        let title;
+        let sub;
+
+        if (type === 'group') {
+          key = row.programName || 'Not Specified';
+          title = key;
+          sub = 'Group-wise result';
+        } else if (type === 'subject') {
+          key = [row.subjectName || 'Not Specified', row.paperCourseName || ''].join(' | ');
+          title = row.paperCourseName || row.subjectName || 'Not Specified';
+          sub = [row.subjectName, row.programName, row.semester].filter(Boolean).join(' · ');
+        } else {
+          key = 'College Overall';
+          title = 'College Overall';
+          sub = 'All final submitted records';
+        }
+
+        if (!map[key]) {
+          map[key] = { title: title, sub: sub, total: 0, pass: 0, fail: 0 };
+        }
+
+        const result = String(row.overallResult || '').toUpperCase();
+        if (result === 'P' || result === 'F') {
+          map[key].total++;
+          if (result === 'P') map[key].pass++;
+          if (result === 'F') map[key].fail++;
+        }
+      });
+
+      return Object.values(map).map(item => {
+        item.passPercent = item.total ? Math.round((item.pass / item.total) * 100) : 0;
+        return item;
+      }).sort((a, b) => naturalDashSort(a.title, b.title));
+    }
+
+    function renderResultAnalysis() {
+      const filtered = resultAnalysisFilteredRows();
+      const type = el.analysisType ? el.analysisType.value : 'college';
+      const summary = makeResultSummary(filtered);
+
+      document.getElementById('analysisTotal').textContent = summary.total;
+      document.getElementById('analysisPass').textContent = summary.pass;
+      document.getElementById('analysisFail').textContent = summary.fail;
+      document.getElementById('analysisPassPercent').textContent = summary.passPercent + '%';
+
+      const aggregate = aggregateResultRows(filtered, type);
+      const label = type === 'group' ? 'Group' : (type === 'subject' ? 'Subject / Paper' : 'Level');
+
+      document.getElementById('analysisList').innerHTML = aggregate.length ? `
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h2>${type === 'group' ? 'Group-wise Result' : (type === 'subject' ? 'Subject-wise Result' : 'College-wise Result')}</h2>
+              <div class="hint">Based only on Final Submitted student-paper records.</div>
+            </div>
+          </div>
+          <table class="analysis-table">
+            <thead>
+              <tr>
+                <th>${label}</th>
+                <th>Total</th>
+                <th>Pass</th>
+                <th>Fail</th>
+                <th>Pass %</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${aggregate.map(item => `
+                <tr>
+                  <td><div class="paper-title">${escapeHtml(item.title)}</div><div class="hint">${escapeHtml(item.sub || '')}</div></td>
+                  <td>${item.total}</td>
+                  <td class="pass-text">${item.pass}</td>
+                  <td class="fail-text">${item.fail}</td>
+                  <td>${item.passPercent}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : '<div class="notice info show">No Final Submitted records found for the selected filters.</div>';
+    }
+
+    function applyResultAnalysisFilters() {
+      refreshResultAnalysisOptions();
+      renderResultAnalysis();
+    }
+
+    function resetResultAnalysisFilters() {
+      [el.analysisAcademicYear, el.analysisSemester, el.analysisProgramName, el.analysisSubjectName].forEach(select => {
+        if (select) select.value = '';
+      });
+      if (el.analysisType) el.analysisType.value = 'college';
+      refreshResultAnalysisOptions();
+      renderResultAnalysis();
+    }
+
+    async function loadResultAnalysis() {
+      try {
+        document.getElementById('analysisList').innerHTML = '<div class="notice info show">Loading result analysis...</div>';
+        const data = await jsonp('getResultAnalysisData', {}, 60000);
+        if (!data.success) throw new Error(data.message || 'Could not load result analysis');
+
+        state.analysisRows = data.rows || [];
+        refreshResultAnalysisOptions();
+        renderResultAnalysis();
+      } catch (err) {
+        document.getElementById('analysisList').innerHTML = `<div class="notice error show">${escapeHtml(err.message || String(err))}</div>`;
+      }
+    }
+
     function moveNext() {
       if (!state.activeInput) return;
 
@@ -2727,6 +2985,23 @@
           applyDashboardFilters();
         });
       });
+
+      [
+        [el.analysisAcademicYear, 'academicYear'],
+        [el.analysisSemester, 'semester'],
+        [el.analysisProgramName, 'programName'],
+        [el.analysisSubjectName, 'subjectName']
+      ].forEach(([sel, field]) => {
+        if (!sel) return;
+        sel.addEventListener('change', () => {
+          refreshResultAnalysisOptions(field);
+          applyResultAnalysisFilters();
+        });
+      });
+
+      if (el.analysisType) {
+        el.analysisType.addEventListener('change', applyResultAnalysisFilters);
+      }
     }
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -2738,6 +3013,7 @@
           try { await loadFilters('reports'); } catch (err) { showNotice(el.reportNotice, 'error', err.message); }
         }
         if (btn.dataset.screen === 'dashboard') loadDashboard();
+        if (btn.dataset.screen === 'analysis') loadResultAnalysis();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
@@ -2768,6 +3044,9 @@
     window.loadDashboard = loadDashboard;
     window.applyDashboardFilters = applyDashboardFilters;
     window.resetDashboardFilters = resetDashboardFilters;
+    window.loadResultAnalysis = loadResultAnalysis;
+    window.applyResultAnalysisFilters = applyResultAnalysisFilters;
+    window.resetResultAnalysisFilters = resetResultAnalysisFilters;
 
     init();
   </script>
