@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.3 - AB Quick Button</title>
+  <title>CIE Mobile-First Portal V88.2 - Numeric Keypad Flow</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -40,37 +40,6 @@
     }
 
     button, input, select { font: inherit; }
-
-    .ab-cell {
-      position: relative;
-      min-width: 70px;
-    }
-
-    .ab-cell .mark-input {
-      padding-right: 30px;
-    }
-
-    .ab-btn {
-      position: absolute;
-      right: 4px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 26px;
-      height: 26px;
-      border: 1px solid #cfe0f6;
-      border-radius: 9px;
-      background: #eef5ff;
-      color: var(--primary);
-      font-size: 10px;
-      font-weight: 950;
-      padding: 0;
-      line-height: 1;
-      box-shadow: none;
-    }
-
-    .ab-btn:active {
-      transform: translateY(-50%) scale(0.96);
-    }
     button { cursor: pointer; }
     .app { min-height: 100vh; min-height: 100svh; padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 18px); }
 
@@ -2320,17 +2289,6 @@
         select.addEventListener('change', () => handleGradeChange(select));
       });
 
-      document.querySelectorAll('[data-ab-btn="true"]').forEach(btn => {
-        btn.addEventListener('click', event => {
-          event.preventDefault();
-          const input = btn.closest('td')?.querySelector('.mark-input');
-          if (!input) return;
-          input.value = 'AB';
-          state.activeInput = input;
-          handleMarkInput(input);
-        });
-      });
-
       applyPaperTypeVisibility();
       state.students.forEach((s, i) => updateRow(i));
     }
@@ -2338,10 +2296,11 @@
     function inputCell(row, field, max, value = '', cellClass = '') {
       const hint = field === 'attendance' ? 'done' : 'next';
       const allowAB = fieldAllowsAB(field);
-      // V88.3: keep numeric keypad for Mid-1 and Mid-2 and provide a tap AB button.
+      // V88.2: keep numeric keypad for Mid-1 and Mid-2.
+      // AB is still accepted if typed manually, pasted, or entered after switching keyboard.
       const mode = 'numeric';
       const pattern = allowAB ? '[0-9AaBb]*' : '[0-9]*';
-      return `<td class="${cellClass} ${allowAB ? 'ab-cell' : ''}"><input class="mark-input" inputmode="${mode}" pattern="${pattern}" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" ${allowAB ? 'data-allow-ab="true"' : ''} value="${escapeAttr(value)}"/>${allowAB ? '<button class="ab-btn" type="button" data-ab-btn="true" aria-label="Mark absent">AB</button>' : ''}</td>`;
+      return `<td class="${cellClass}"><input class="mark-input" inputmode="${mode}" pattern="${pattern}" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" ${allowAB ? 'data-allow-ab="true"' : ''} value="${escapeAttr(value)}"/></td>`;
     }
 
     function practicalInputCell(row, max, value = '') {
