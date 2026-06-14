@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V83 - Clear Table Warning</title>
+  <title>CIE Mobile-First Portal V84 - Desktop Row Flow</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1526,7 +1526,7 @@
         } else {
           input.blur();
         }
-      }, isMobileView() ? 1050 : 650);
+      }, isMobileView() ? 1050 : 750);
     }
 
     function smoothFocusControl(control) {
@@ -1717,8 +1717,8 @@
       showActionStatus('success', 'Table data cleared. You can enter marks again.', 3500);
 
       const first = firstEntryControlForRow(0);
-      if (first && isMobileView()) {
-        setTimeout(() => smoothFocusControl(first), 250);
+      if (first) {
+        setTimeout(() => smoothFocusControl(first), isMobileView() ? 250 : 120);
       }
     }
 
@@ -1848,11 +1848,11 @@
 
       // Theory + Practical: after Practical Marks, show Practical Result briefly,
       // then smoothly move to next row first entry field.
-      if (field === 'practicalMarks' && mode.hasTheory && mode.hasPractical && input.value && isMobileView()) {
+      if (field === 'practicalMarks' && mode.hasTheory && mode.hasPractical && input.value) {
         window.clearTimeout(input._moveTimer);
         input._moveTimer = window.setTimeout(() => {
           showPracticalResultThenNextRow(input, rowIndex);
-        }, 420);
+        }, isMobileView() ? 420 : 260);
         return;
       }
 
@@ -1878,13 +1878,11 @@
 
       const mode = getMode();
 
-      if (!isMobileView()) return;
-
       // Theory + Practical: after SEE grade, go smoothly to Practical Marks.
       if (mode.hasPractical) {
         const practical = select.closest('tr').querySelector('[data-field="practicalMarks"]');
         if (practical) {
-          setTimeout(() => smoothFocusControl(practical), 180);
+          setTimeout(() => smoothFocusControl(practical), isMobileView() ? 180 : 120);
         }
         return;
       }
@@ -1892,7 +1890,7 @@
       // Theory-only: after manual SEE grade selection, move to next row first entry field.
       const nextFirst = nextRowFirstEntryControl(rowIndex);
       if (nextFirst) {
-        setTimeout(() => smoothFocusControl(nextFirst), 260);
+        setTimeout(() => smoothFocusControl(nextFirst), isMobileView() ? 260 : 150);
       } else {
         select.blur();
       }
