@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V85 - Auto Hide Corrected Error</title>
+  <title>CIE Mobile-First Portal V86 - AB Internal and Result Formula</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1434,15 +1434,41 @@
       document.documentElement.style.setProperty('--marks-table-offset', offset + 'px');
     }
 
+    function isAbsentMarkValue(value) {
+      return String(value || '').trim().toUpperCase() === 'AB';
+    }
+
+    function fieldAllowsAB(field) {
+      return field === 'mid1' || field === 'mid2';
+    }
+
+    function markValueForCalc(value) {
+      if (isAbsentMarkValue(value)) return 0;
+      const n = Number(value || 0);
+      return Number.isFinite(n) ? n : 0;
+    }
+
     function validateMarkInput(input, showMessageFlag = true) {
       if (!input) return true;
       const field = input.dataset.field || '';
       const max = Number(input.dataset.max || 0);
-      const value = String(input.value || '').trim();
+      let value = String(input.value || '').trim().toUpperCase();
 
-      input.value = value.replace(/[^0-9]/g, '');
+      if (fieldAllowsAB(field) && value.startsWith('A')) {
+        value = 'AB';
+        input.value = 'AB';
+      } else {
+        input.value = value.replace(/[^0-9]/g, '');
+        value = input.value;
+      }
 
       if (input.value === '') {
+        input.classList.remove('input-error');
+        clearMarkValidationNoticeIfResolved();
+        return true;
+      }
+
+      if (fieldAllowsAB(field) && isAbsentMarkValue(input.value)) {
         input.classList.remove('input-error');
         clearMarkValidationNoticeIfResolved();
         return true;
@@ -1452,7 +1478,8 @@
       if (!Number.isFinite(n) || n < 0 || n > max) {
         input.classList.add('input-error');
         if (showMessageFlag) {
-          showMarkValidationNotice(`${fieldLabel(field)} cannot be more than ${max}. Please correct the highlighted mark.`);
+          const abNote = fieldAllowsAB(field) ? ' You may also enter AB for absent.' : '';
+          showMarkValidationNotice(`${fieldLabel(field)} cannot be more than ${max}.${abNote} Please correct the highlighted mark.`);
         }
         return false;
       }
@@ -1854,9 +1881,12 @@
 
     function shouldAutoMoveFromInput(input) {
       const max = Number(input.dataset.max || 0);
-      const value = String(input.value || '');
+      const value = String(input.value || '').trim().toUpperCase();
 
       if (!value || input.classList.contains('input-error')) return false;
+
+      // AB is allowed only for Mid-1 and Mid-2. Treat it as complete and move next.
+      if (fieldAllowsAB(input.dataset.field || '') && value === 'AB') return true;
 
       // One-digit max fields move after one valid digit, with a slower delay on mobile.
       // Flow: Assignment -> Seminar -> Attendance -> SEE Grade dropdown.
@@ -2220,7 +2250,11 @@
 
     function inputCell(row, field, max, value = '', cellClass = '') {
       const hint = field === 'attendance' ? 'done' : 'next';
-      return `<td class="${cellClass}"><input class="mark-input" inputmode="numeric" pattern="[0-9]*" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" value="${escapeAttr(value)}"/></td>`;
+      const allowAB = fieldAllowsAB(field);
+      const mode = allowAB ? 'text' : 'numeric';
+      const pattern = allowAB ? '[0-9AaBb]*' : '[0-9]*';
+      const placeholder = allowAB ? 'AB' : '';
+      return `<td class="${cellClass}"><input class="mark-input" inputmode="${mode}" pattern="${pattern}" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" ${allowAB ? 'data-allow-ab="true"' : ''} placeholder="${placeholder}" value="${escapeAttr(value)}"/></td>`;
     }
 
     function practicalInputCell(row, max, value = '') {
@@ -2257,7 +2291,7 @@
       const get = field => {
         const input = row.querySelector(`[data-field="${field}"]`);
         if (!input || input.classList.contains('input-error')) return 0;
-        return Number(input.value || 0);
+        return markValueForCalc(input.value);
       };
 
       const midTotal = get('mid1') + get('mid2');
@@ -2274,7 +2308,13 @@
       row.querySelector('[data-total="grand"]').textContent = grand;
 
       const theoryResult = row.querySelector('[data-result="theory"]');
-      theoryResult.textContent = grade && grade !== 'F' && grade !== 'AB' ? 'P' : (grade ? 'F' : '-');
+      if (grade) {
+        // V86 official subject result formula:
+        // P only when Scale Down to 30 >= 9 AND SEE Theory Marks >= 27.
+        theoryResult.textContent = (scale >= 9 && see >= 27) ? 'P' : 'F';
+      } else {
+        theoryResult.textContent = '-';
+      }
       theoryResult.className = theoryResult.textContent === 'P' ? 'result-p' : (theoryResult.textContent === 'F' ? 'result-f' : '');
 
       const practicalResult = row.querySelector('[data-result="practical"]');
