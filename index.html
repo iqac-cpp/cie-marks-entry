@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Portal V92 - Advanced Visual Experience</title>
+  <title>CIE Mobile-First Portal V91 - Analysis Filters Stable Load</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -184,6 +184,49 @@
     .dashboard-filters {
       margin-top: 10px;
     }
+
+    .analysis-filter-box {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #f8fbff;
+    }
+
+    .analysis-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      font-size: 13px;
+    }
+
+    .analysis-table th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 6px 8px;
+    }
+
+    .analysis-table td {
+      background: #fff;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 11px 8px;
+      font-weight: 800;
+    }
+
+    .analysis-table td:first-child {
+      border-left: 1px solid var(--border);
+      border-radius: 14px 0 0 14px;
+    }
+
+    .analysis-table td:last-child {
+      border-right: 1px solid var(--border);
+      border-radius: 0 14px 14px 0;
+    }
+
+    .pass-text { color: var(--success); }
+    .fail-text { color: #dc2626; }
     .stat {
       background: #f8fbff;
       border: 1px solid var(--border);
@@ -700,7 +743,7 @@
       border-top: 1px solid var(--border);
       box-shadow: 0 -10px 26px rgba(20, 50, 90, 0.10);
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 8px;
     }
 
@@ -753,262 +796,6 @@
       color: var(--muted);
       font-size: 13px;
       font-weight: 700;
-    }
-
-    .insight-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin: 14px 0 12px;
-    }
-
-    .visual-card {
-      border: 1px solid var(--border);
-      background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(247,251,255,0.92));
-      border-radius: 22px;
-      padding: 15px;
-      box-shadow: 0 14px 36px rgba(20, 50, 90, 0.10);
-      overflow: hidden;
-    }
-
-    .visual-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .visual-title h3 {
-      margin: 0;
-      color: #14345c;
-      font-size: 15px;
-      font-weight: 950;
-    }
-
-    .visual-title span {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 850;
-    }
-
-    .donut-wrap {
-      display: grid;
-      grid-template-columns: 112px 1fr;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .donut {
-      width: 112px;
-      height: 112px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      background: conic-gradient(var(--success) 0 0%, #f0b03a 0 0%, var(--primary) 0 0%, #dfe8f5 0 100%);
-      box-shadow: inset 0 0 0 12px rgba(255,255,255,0.72), 0 10px 26px rgba(20,50,90,0.16);
-    }
-
-    .donut-center {
-      width: 68px;
-      height: 68px;
-      border-radius: 999px;
-      background: #fff;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      box-shadow: inset 0 0 0 1px var(--border);
-    }
-
-    .donut-center strong {
-      display: block;
-      color: var(--primary);
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .donut-center small {
-      display: block;
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 900;
-      margin-top: 3px;
-    }
-
-    .legend-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 13px;
-      font-weight: 850;
-      color: #18345a;
-    }
-
-    .legend-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      flex: 0 0 auto;
-    }
-
-    .legend-dot.final { background: var(--success); }
-    .legend-dot.internal { background: #f0b03a; }
-    .legend-dot.partial { background: var(--primary); }
-    .legend-dot.pending { background: #dfe8f5; }
-
-    .stacked-bar {
-      height: 16px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: #e7eef8;
-      display: flex;
-      box-shadow: inset 0 0 0 1px rgba(20,50,90,0.08);
-      margin: 8px 0 12px;
-    }
-
-    .stacked-bar span {
-      min-width: 0;
-      transition: width 0.5s ease;
-    }
-
-    .bar-final { background: var(--success); }
-    .bar-internal { background: #f0b03a; }
-    .bar-partial { background: var(--primary); }
-    .bar-pending { background: #dfe8f5; }
-
-    .mini-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .mini-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .mini-title {
-      font-size: 13px;
-      font-weight: 900;
-      color: #18345a;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .mini-sub {
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--muted);
-      margin-top: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .mini-value {
-      font-size: 13px;
-      font-weight: 950;
-      color: var(--primary);
-    }
-
-    .thin-meter {
-      grid-column: 1 / -1;
-      height: 8px;
-      border-radius: 999px;
-      background: #e8eef7;
-      overflow: hidden;
-    }
-
-    .thin-meter span {
-      display: block;
-      height: 100%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--primary), var(--success));
-      width: 0%;
-      transition: width 0.45s ease;
-    }
-
-    .status-card {
-      position: relative;
-      overflow: hidden;
-    }
-
-    .status-card::before {
-      content: "";
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 5px;
-      background: #dfe8f5;
-    }
-
-    .status-card.done::before { background: var(--success); }
-    .status-card.pending::before { background: var(--warning); }
-    .status-card.partial::before { background: var(--primary); }
-
-    .status-card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 16px 34px rgba(20,50,90,0.12);
-    }
-
-    .status-card {
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
-    }
-
-    .status-progress {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      align-items: center;
-      font-size: 12px;
-      font-weight: 900;
-      color: var(--muted);
-    }
-
-    .status-progress-track {
-      grid-column: 1 / -1;
-      height: 9px;
-      background: #e8eef7;
-      border-radius: 999px;
-      overflow: hidden;
-    }
-
-    .status-progress-track span {
-      display: block;
-      height: 100%;
-      width: 0%;
-      border-radius: 999px;
-      background: linear-gradient(90deg, var(--primary), var(--success));
-    }
-
-    .dashboard-caption {
-      margin: 6px 0 10px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 850;
-    }
-
-    @media (min-width: 900px) {
-      .insight-grid {
-        grid-template-columns: 1.1fr 1fr;
-      }
-      .status-list.dashboard-list-advanced {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
     }
 
     .notice {
@@ -1267,6 +1054,7 @@
       <button class="nav-btn active" type="button" data-screen="marks"><span class="icon">✍️</span><span>Marks</span></button>
       <button class="nav-btn" type="button" data-screen="reports"><span class="icon">📄</span><span>Reports</span></button>
       <button class="nav-btn" type="button" data-screen="dashboard"><span class="icon">📊</span><span>Dashboard</span></button>
+      <button class="nav-btn" type="button" data-screen="analysis"><span class="icon">📈</span><span>Analysis</span></button>
     </nav>
 
     <main class="container">
@@ -1415,38 +1203,49 @@
           </div>
         </div>
 
-        <div id="dashboardVisuals" class="insight-grid" style="display:none;">
-          <div class="visual-card">
-            <div class="visual-title">
-              <h3>Completion Overview</h3>
-              <span id="dashVisualCaption">All papers</span>
+        <div id="dashboardList" class="status-list"></div>
+      </section>
+
+      <section id="analysis" class="screen">
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h2>Result Analysis</h2>
+              <div class="hint">Final Submitted records only. Verify college-wise, group-wise and subject-wise result.</div>
             </div>
-            <div class="donut-wrap">
-              <div class="donut" id="dashDonut">
-                <div class="donut-center"><div><strong id="dashDonutPercent">0%</strong><small>FINAL</small></div></div>
-              </div>
-              <div>
-                <div class="stacked-bar" id="dashStackedBar">
-                  <span class="bar-final" style="width:0%"></span>
-                  <span class="bar-internal" style="width:0%"></span>
-                  <span class="bar-partial" style="width:0%"></span>
-                  <span class="bar-pending" style="width:100%"></span>
-                </div>
-                <div class="legend-list" id="dashLegendList"></div>
-              </div>
-            </div>
+            <button class="btn" type="button" onclick="loadResultAnalysis()">Refresh</button>
           </div>
 
-          <div class="visual-card">
-            <div class="visual-title">
-              <h3>Attention Needed</h3>
-              <span>Pending / Partial</span>
+          <div class="summary-row">
+            <div class="stat"><div class="num" id="analysisTotal">0</div><div class="label">Final Records</div></div>
+            <div class="stat"><div class="num" id="analysisPass">0</div><div class="label">Pass</div></div>
+            <div class="stat"><div class="num" id="analysisFail">0</div><div class="label">Fail</div></div>
+            <div class="stat"><div class="num" id="analysisPassPercent">0%</div><div class="label">Pass %</div></div>
+          </div>
+
+          <div class="analysis-filter-box">
+            <div class="hint">Default view shows college-wise overall final result. Use filters for verification.</div>
+            <div class="form-grid dashboard-filters">
+              <div class="field"><label>Academic Year</label><select id="analysisAcademicYear"></select></div>
+              <div class="field"><label>Semester</label><select id="analysisSemester"></select></div>
+              <div class="field"><label>Course / Group</label><select id="analysisProgramName"></select></div>
+              <div class="field"><label>Subject</label><select id="analysisSubjectName"></select></div>
+              <div class="field"><label>Analysis Type</label>
+                <select id="analysisType">
+                  <option value="college">College-wise</option>
+                  <option value="group">Group-wise</option>
+                  <option value="subject">Subject-wise</option>
+                </select>
+              </div>
             </div>
-            <div class="mini-list" id="dashPriorityList"></div>
+            <div class="action-row">
+              <button class="btn primary" type="button" onclick="applyResultAnalysisFilters()">Apply Analysis</button>
+              <button class="btn" type="button" onclick="resetResultAnalysisFilters()">Show All</button>
+            </div>
           </div>
         </div>
 
-        <div id="dashboardList" class="status-list dashboard-list-advanced"></div>
+        <div id="analysisList" class="status-list"></div>
       </section>
     </main>
   </div>
@@ -1488,7 +1287,9 @@
       existingMarks: {},
       activeInput: null,
       isFinalLocked: false,
-      dashboardRows: []
+      dashboardRows: [],
+      analysisRows: [],
+      analysisFilterRows: []
     };
 
     const el = {
@@ -1527,7 +1328,12 @@
       dashSemester: document.getElementById('dashSemester'),
       dashProgramName: document.getElementById('dashProgramName'),
       dashSubjectName: document.getElementById('dashSubjectName'),
-      dashStatus: document.getElementById('dashStatus')
+      dashStatus: document.getElementById('dashStatus'),
+      analysisAcademicYear: document.getElementById('analysisAcademicYear'),
+      analysisSemester: document.getElementById('analysisSemester'),
+      analysisProgramName: document.getElementById('analysisProgramName'),
+      analysisSubjectName: document.getElementById('analysisSubjectName'),
+      analysisType: document.getElementById('analysisType')
     };
 
     function jsonp(action, params = {}, timeoutMs = 45000) {
@@ -2889,36 +2695,6 @@
       setDashboardOptions(el.dashStatus, dashOptionValues(dashboardFilteredRows('subjectName'), 'status'));
     }
 
-    function dashboardStatusKind(status) {
-      const text = String(status || '').toLowerCase();
-      if (text.includes('final')) return 'final';
-      if (text.includes('internal')) return 'internal';
-      if (text.includes('partial')) return 'partial';
-      return 'pending';
-    }
-
-    function dashboardStatusClass(status) {
-      const kind = dashboardStatusKind(status);
-      if (kind === 'final') return 'done';
-      if (kind === 'pending') return 'pending';
-      return 'partial';
-    }
-
-    function dashboardCompletionPercent(row) {
-      const total = Number(row.totalStudents || row.studentCount || row.students || 0);
-      const finalDone = Number(row.finalSubmitted || 0);
-      if (!total) return 0;
-      return Math.max(0, Math.min(100, Math.round((finalDone / total) * 100)));
-    }
-
-    function dashboardStudentProgressText(row) {
-      const total = Number(row.totalStudents || row.studentCount || row.students || 0);
-      const finalDone = Number(row.finalSubmitted || 0);
-      const internalDone = Number(row.internalSaved || 0);
-      if (!total) return 'No student count';
-      return `${finalDone}/${total} final · ${internalDone}/${total} internal`;
-    }
-
     function makeDashboardSummaryFromRows(rows) {
       const list = rows || [];
       return {
@@ -2929,90 +2705,7 @@
       };
     }
 
-    function renderDashboardVisuals(rows) {
-      const list = rows || [];
-      const visual = document.getElementById('dashboardVisuals');
-      if (!visual) return;
-
-      if (!list.length) {
-        visual.style.display = 'none';
-        return;
-      }
-
-      visual.style.display = '';
-
-      const total = list.length || 1;
-      const counts = { final: 0, internal: 0, partial: 0, pending: 0 };
-      list.forEach(row => counts[dashboardStatusKind(row.status)]++);
-
-      const finalPct = Math.round((counts.final / total) * 100);
-      const internalPct = Math.round((counts.internal / total) * 100);
-      const partialPct = Math.round((counts.partial / total) * 100);
-      const pendingPct = Math.max(0, 100 - finalPct - internalPct - partialPct);
-
-      const donut = document.getElementById('dashDonut');
-      if (donut) {
-        const endFinal = finalPct;
-        const endInternal = endFinal + internalPct;
-        const endPartial = endInternal + partialPct;
-        donut.style.background = `conic-gradient(var(--success) 0 ${endFinal}%, #f0b03a ${endFinal}% ${endInternal}%, var(--primary) ${endInternal}% ${endPartial}%, #dfe8f5 ${endPartial}% 100%)`;
-      }
-
-      const pctBox = document.getElementById('dashDonutPercent');
-      if (pctBox) pctBox.textContent = finalPct + '%';
-
-      const caption = document.getElementById('dashVisualCaption');
-      if (caption) caption.textContent = `${list.length} paper${list.length === 1 ? '' : 's'} in current view`;
-
-      const stacked = document.getElementById('dashStackedBar');
-      if (stacked) {
-        const parts = stacked.querySelectorAll('span');
-        if (parts[0]) parts[0].style.width = finalPct + '%';
-        if (parts[1]) parts[1].style.width = internalPct + '%';
-        if (parts[2]) parts[2].style.width = partialPct + '%';
-        if (parts[3]) parts[3].style.width = pendingPct + '%';
-      }
-
-      const legend = document.getElementById('dashLegendList');
-      if (legend) {
-        legend.innerHTML = [
-          ['final', 'Final Submitted', counts.final, finalPct],
-          ['internal', 'Internal Saved', counts.internal, internalPct],
-          ['partial', 'Partial', counts.partial, partialPct],
-          ['pending', 'Pending', counts.pending, pendingPct]
-        ].map(item => `
-          <div class="legend-item">
-            <div class="legend-left"><span class="legend-dot ${item[0]}"></span><span>${item[1]}</span></div>
-            <span>${item[2]} · ${item[3]}%</span>
-          </div>
-        `).join('');
-      }
-
-      const priority = document.getElementById('dashPriorityList');
-      if (priority) {
-        const pendingRows = [...list]
-          .filter(row => dashboardStatusKind(row.status) !== 'final')
-          .sort((a, b) => dashboardCompletionPercent(a) - dashboardCompletionPercent(b))
-          .slice(0, 5);
-
-        priority.innerHTML = pendingRows.length ? pendingRows.map(row => {
-          const percent = dashboardCompletionPercent(row);
-          return `
-            <div class="mini-row">
-              <div>
-                <div class="mini-title">${escapeHtml(row.paperCourseName || row.paper || row.nameOfPaper || 'Untitled paper')}</div>
-                <div class="mini-sub">${escapeHtml(row.subjectName || row.subject || '')} · ${escapeHtml(row.programName || '')}</div>
-              </div>
-              <div class="mini-value">${percent}%</div>
-              <div class="thin-meter"><span style="width:${percent}%"></span></div>
-            </div>
-          `;
-        }).join('') : '<div class="notice success show">All visible papers are final submitted.</div>';
-      }
-    }
-
     function renderDashboardRows(rows) {
-      renderDashboardVisuals(rows);
       const s = makeDashboardSummaryFromRows(rows);
       document.getElementById('dashTotal').textContent = s.totalPapers || 0;
       document.getElementById('dashPending').textContent = s.pending || 0;
@@ -3022,9 +2715,8 @@
       const list = rows || [];
       document.getElementById('dashboardList').innerHTML = list.length ? list.map(row => {
         const status = row.status || row.submissionStatus || 'Pending';
-        const cls = dashboardStatusClass(status);
-        const percent = dashboardCompletionPercent(row);
-        return `<div class="status-card ${cls}">
+        const cls = status.toLowerCase().includes('final') ? 'done' : (status.toLowerCase().includes('pending') ? 'pending' : 'partial');
+        return `<div class="status-card">
           <div class="status-top">
             <div>
               <div class="paper-title">${escapeHtml(row.paperCourseName || row.paper || row.nameOfPaper || '')}</div>
@@ -3035,11 +2727,6 @@
           <div class="status-meta">
             <div>Students: ${escapeHtml(row.totalStudents || row.studentCount || row.students || '')}</div>
             <div>PDF: ${row.pdfUrl ? 'Generated' : 'Not generated'}</div>
-          </div>
-          <div class="status-progress">
-            <span>${escapeHtml(dashboardStudentProgressText(row))}</span>
-            <span>${percent}% final</span>
-            <div class="status-progress-track"><span style="width:${percent}%"></span></div>
           </div>
         </div>`;
       }).join('') : '<div class="notice info show">No papers found for the selected filters.</div>';
@@ -3070,6 +2757,225 @@
         renderDashboardRows(dashboardFilteredRows());
       } catch (err) {
         document.getElementById('dashboardList').innerHTML = `<div class="notice error show">${escapeHtml(err.message || String(err))}</div>`;
+      }
+    }
+
+    function resultAnalysisFilteredRows(level = 'all') {
+      const academicYear = el.analysisAcademicYear ? el.analysisAcademicYear.value : '';
+      const semester = el.analysisSemester ? el.analysisSemester.value : '';
+      const programName = el.analysisProgramName ? el.analysisProgramName.value : '';
+      const subjectName = el.analysisSubjectName ? el.analysisSubjectName.value : '';
+
+      return (state.analysisRows || []).filter(row => {
+        if (academicYear && !sameDashValue(row.academicYear, academicYear)) return false;
+        if (level === 'academicYear') return true;
+        if (semester && !sameDashValue(row.semester, semester)) return false;
+        if (level === 'semester') return true;
+        if (programName && !sameDashValue(row.programName, programName)) return false;
+        if (level === 'programName') return true;
+        if (subjectName && !sameDashValue(row.subjectName, subjectName)) return false;
+        return true;
+      });
+    }
+
+    function resultAnalysisFilterSourceRows(level = 'all') {
+      const source = (state.analysisFilterRows && state.analysisFilterRows.length) ? state.analysisFilterRows : state.analysisRows;
+      const academicYear = el.analysisAcademicYear ? el.analysisAcademicYear.value : '';
+      const semester = el.analysisSemester ? el.analysisSemester.value : '';
+      const programName = el.analysisProgramName ? el.analysisProgramName.value : '';
+      const subjectName = el.analysisSubjectName ? el.analysisSubjectName.value : '';
+
+      return (source || []).filter(row => {
+        if (academicYear && !sameDashValue(row.academicYear, academicYear)) return false;
+        if (level === 'academicYear') return true;
+        if (semester && !sameDashValue(row.semester, semester)) return false;
+        if (level === 'semester') return true;
+        if (programName && !sameDashValue(row.programName, programName)) return false;
+        if (level === 'programName') return true;
+        if (subjectName && !sameDashValue(row.subjectName, subjectName)) return false;
+        return true;
+      });
+    }
+
+    function refreshResultAnalysisOptions(changedField = '') {
+      const filterSource = (state.analysisFilterRows && state.analysisFilterRows.length) ? state.analysisFilterRows : state.analysisRows;
+      if (!filterSource.length) return;
+
+      if (changedField === 'academicYear') {
+        if (el.analysisSemester) el.analysisSemester.value = '';
+        if (el.analysisProgramName) el.analysisProgramName.value = '';
+        if (el.analysisSubjectName) el.analysisSubjectName.value = '';
+      } else if (changedField === 'semester') {
+        if (el.analysisProgramName) el.analysisProgramName.value = '';
+        if (el.analysisSubjectName) el.analysisSubjectName.value = '';
+      } else if (changedField === 'programName') {
+        if (el.analysisSubjectName) el.analysisSubjectName.value = '';
+      }
+
+      setDashboardOptions(el.analysisAcademicYear, dashOptionValues(filterSource, 'academicYear'));
+      setDashboardOptions(el.analysisSemester, dashOptionValues(resultAnalysisFilterSourceRows('academicYear'), 'semester'));
+      setDashboardOptions(el.analysisProgramName, dashOptionValues(resultAnalysisFilterSourceRows('semester'), 'programName'));
+      setDashboardOptions(el.analysisSubjectName, dashOptionValues(resultAnalysisFilterSourceRows('programName'), 'subjectName'));
+    }
+
+    function makeResultSummary(rows) {
+      const list = rows || [];
+      const pass = list.filter(r => String(r.overallResult || '').toUpperCase() === 'P').length;
+      const fail = list.filter(r => String(r.overallResult || '').toUpperCase() === 'F').length;
+      const total = pass + fail;
+      return {
+        total: total,
+        pass: pass,
+        fail: fail,
+        passPercent: total ? Math.round((pass / total) * 100) : 0
+      };
+    }
+
+    function aggregateResultRows(rows, type) {
+      const list = rows || [];
+      const map = {};
+
+      list.forEach(row => {
+        let key;
+        let title;
+        let sub;
+
+        if (type === 'group') {
+          key = row.programName || 'Not Specified';
+          title = key;
+          sub = 'Group-wise result';
+        } else if (type === 'subject') {
+          key = [row.subjectName || 'Not Specified', row.paperCourseName || ''].join(' | ');
+          title = row.paperCourseName || row.subjectName || 'Not Specified';
+          sub = [row.subjectName, row.programName, row.semester].filter(Boolean).join(' · ');
+        } else {
+          key = 'College Overall';
+          title = 'College Overall';
+          sub = 'All final submitted records';
+        }
+
+        if (!map[key]) {
+          map[key] = { title: title, sub: sub, total: 0, pass: 0, fail: 0 };
+        }
+
+        const result = String(row.overallResult || '').toUpperCase();
+        if (result === 'P' || result === 'F') {
+          map[key].total++;
+          if (result === 'P') map[key].pass++;
+          if (result === 'F') map[key].fail++;
+        }
+      });
+
+      return Object.values(map).map(item => {
+        item.passPercent = item.total ? Math.round((item.pass / item.total) * 100) : 0;
+        return item;
+      }).sort((a, b) => naturalDashSort(a.title, b.title));
+    }
+
+    function renderResultAnalysis() {
+      const filtered = resultAnalysisFilteredRows();
+      const type = el.analysisType ? el.analysisType.value : 'college';
+      const summary = makeResultSummary(filtered);
+
+      document.getElementById('analysisTotal').textContent = summary.total;
+      document.getElementById('analysisPass').textContent = summary.pass;
+      document.getElementById('analysisFail').textContent = summary.fail;
+      document.getElementById('analysisPassPercent').textContent = summary.passPercent + '%';
+
+      const aggregate = aggregateResultRows(filtered, type);
+      const label = type === 'group' ? 'Group' : (type === 'subject' ? 'Subject / Paper' : 'Level');
+
+      document.getElementById('analysisList').innerHTML = aggregate.length ? `
+        <div class="card">
+          <div class="section-title">
+            <div>
+              <h2>${type === 'group' ? 'Group-wise Result' : (type === 'subject' ? 'Subject-wise Result' : 'College-wise Result')}</h2>
+              <div class="hint">Based only on Final Submitted student-paper records.</div>
+            </div>
+          </div>
+          <table class="analysis-table">
+            <thead>
+              <tr>
+                <th>${label}</th>
+                <th>Total</th>
+                <th>Pass</th>
+                <th>Fail</th>
+                <th>Pass %</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${aggregate.map(item => `
+                <tr>
+                  <td><div class="paper-title">${escapeHtml(item.title)}</div><div class="hint">${escapeHtml(item.sub || '')}</div></td>
+                  <td>${item.total}</td>
+                  <td class="pass-text">${item.pass}</td>
+                  <td class="fail-text">${item.fail}</td>
+                  <td>${item.passPercent}%</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>` : '<div class="notice info show">No Final Submitted records found for the selected filters.</div>';
+    }
+
+    function applyResultAnalysisFilters() {
+      refreshResultAnalysisOptions();
+      renderResultAnalysis();
+    }
+
+    function resetResultAnalysisFilters() {
+      [el.analysisAcademicYear, el.analysisSemester, el.analysisProgramName, el.analysisSubjectName].forEach(select => {
+        if (select) select.value = '';
+      });
+      if (el.analysisType) el.analysisType.value = 'college';
+      refreshResultAnalysisOptions();
+      renderResultAnalysis();
+    }
+
+    async function loadResultAnalysis() {
+      const list = document.getElementById('analysisList');
+
+      try {
+        list.innerHTML = '<div class="notice info show">Loading analysis filters...</div>';
+
+        // V91: load dropdown filters from the already-stable Dashboard API first.
+        // This prevents blank Analysis dropdowns even when no final records exist yet.
+        try {
+          const dashData = await jsonp('getCieStatusDashboardData', {}, 60000);
+          if (dashData && dashData.success) {
+            state.analysisFilterRows = dashData.rows || dashData.dashboard || [];
+            refreshResultAnalysisOptions();
+          }
+        } catch (filterErr) {
+          // Continue to result analysis call; error will be shown if both fail.
+        }
+
+        list.innerHTML = '<div class="notice info show">Loading final submitted result analysis...</div>';
+
+        const data = await jsonp('getResultAnalysisData', {}, 60000);
+        if (!data.success) throw new Error(data.message || 'Could not load result analysis');
+
+        state.analysisRows = data.rows || [];
+
+        // Prefer course/filter rows returned by V90+ backend.
+        // If unavailable, retain Dashboard rows already loaded above.
+        if ((data.filterRows || data.courseRows || []).length) {
+          state.analysisFilterRows = data.filterRows || data.courseRows || [];
+        } else if (!state.analysisFilterRows.length) {
+          state.analysisFilterRows = data.rows || [];
+        }
+
+        refreshResultAnalysisOptions();
+        renderResultAnalysis();
+      } catch (err) {
+        refreshResultAnalysisOptions();
+
+        const message = err && err.message ? err.message : String(err);
+        const backendHint = /unknown action|getResultAnalysisData|result analysis/i.test(message)
+          ? '<br><br><b>Note:</b> Dropdown filters are loaded from Dashboard data. For result analysis values, please replace Apps Script <b>Code.gs V91</b> and deploy a new Web App version.'
+          : '';
+
+        list.innerHTML = `<div class="notice error show">${escapeHtml(message)}${backendHint}</div>`;
       }
     }
 
@@ -3133,6 +3039,23 @@
           applyDashboardFilters();
         });
       });
+
+      [
+        [el.analysisAcademicYear, 'academicYear'],
+        [el.analysisSemester, 'semester'],
+        [el.analysisProgramName, 'programName'],
+        [el.analysisSubjectName, 'subjectName']
+      ].forEach(([sel, field]) => {
+        if (!sel) return;
+        sel.addEventListener('change', () => {
+          refreshResultAnalysisOptions(field);
+          applyResultAnalysisFilters();
+        });
+      });
+
+      if (el.analysisType) {
+        el.analysisType.addEventListener('change', applyResultAnalysisFilters);
+      }
     }
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -3144,6 +3067,7 @@
           try { await loadFilters('reports'); } catch (err) { showNotice(el.reportNotice, 'error', err.message); }
         }
         if (btn.dataset.screen === 'dashboard') loadDashboard();
+        if (btn.dataset.screen === 'analysis') loadResultAnalysis();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
@@ -3174,6 +3098,9 @@
     window.loadDashboard = loadDashboard;
     window.applyDashboardFilters = applyDashboardFilters;
     window.resetDashboardFilters = resetDashboardFilters;
+    window.loadResultAnalysis = loadResultAnalysis;
+    window.applyResultAnalysisFilters = applyResultAnalysisFilters;
+    window.resetResultAnalysisFilters = resetResultAnalysisFilters;
 
     init();
   </script>
