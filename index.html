@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V89 - Result Analysis</title>
+  <title>CIE Mobile-First Portal V90 - Result Analysis Filter Fix</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1288,7 +1288,8 @@
       activeInput: null,
       isFinalLocked: false,
       dashboardRows: [],
-      analysisRows: []
+      analysisRows: [],
+      analysisFilterRows: []
     };
 
     const el = {
@@ -2777,8 +2778,28 @@
       });
     }
 
+    function resultAnalysisFilterSourceRows(level = 'all') {
+      const source = (state.analysisFilterRows && state.analysisFilterRows.length) ? state.analysisFilterRows : state.analysisRows;
+      const academicYear = el.analysisAcademicYear ? el.analysisAcademicYear.value : '';
+      const semester = el.analysisSemester ? el.analysisSemester.value : '';
+      const programName = el.analysisProgramName ? el.analysisProgramName.value : '';
+      const subjectName = el.analysisSubjectName ? el.analysisSubjectName.value : '';
+
+      return (source || []).filter(row => {
+        if (academicYear && !sameDashValue(row.academicYear, academicYear)) return false;
+        if (level === 'academicYear') return true;
+        if (semester && !sameDashValue(row.semester, semester)) return false;
+        if (level === 'semester') return true;
+        if (programName && !sameDashValue(row.programName, programName)) return false;
+        if (level === 'programName') return true;
+        if (subjectName && !sameDashValue(row.subjectName, subjectName)) return false;
+        return true;
+      });
+    }
+
     function refreshResultAnalysisOptions(changedField = '') {
-      if (!state.analysisRows.length) return;
+      const filterSource = (state.analysisFilterRows && state.analysisFilterRows.length) ? state.analysisFilterRows : state.analysisRows;
+      if (!filterSource.length) return;
 
       if (changedField === 'academicYear') {
         if (el.analysisSemester) el.analysisSemester.value = '';
@@ -2791,10 +2812,10 @@
         if (el.analysisSubjectName) el.analysisSubjectName.value = '';
       }
 
-      setDashboardOptions(el.analysisAcademicYear, dashOptionValues(state.analysisRows, 'academicYear'));
-      setDashboardOptions(el.analysisSemester, dashOptionValues(resultAnalysisFilteredRows('academicYear'), 'semester'));
-      setDashboardOptions(el.analysisProgramName, dashOptionValues(resultAnalysisFilteredRows('semester'), 'programName'));
-      setDashboardOptions(el.analysisSubjectName, dashOptionValues(resultAnalysisFilteredRows('programName'), 'subjectName'));
+      setDashboardOptions(el.analysisAcademicYear, dashOptionValues(filterSource, 'academicYear'));
+      setDashboardOptions(el.analysisSemester, dashOptionValues(resultAnalysisFilterSourceRows('academicYear'), 'semester'));
+      setDashboardOptions(el.analysisProgramName, dashOptionValues(resultAnalysisFilterSourceRows('semester'), 'programName'));
+      setDashboardOptions(el.analysisSubjectName, dashOptionValues(resultAnalysisFilterSourceRows('programName'), 'subjectName'));
     }
 
     function makeResultSummary(rows) {
@@ -2918,6 +2939,8 @@
         if (!data.success) throw new Error(data.message || 'Could not load result analysis');
 
         state.analysisRows = data.rows || [];
+        state.analysisFilterRows = data.filterRows || data.courseRows || data.rows || [];
+
         refreshResultAnalysisOptions();
         renderResultAnalysis();
       } catch (err) {
