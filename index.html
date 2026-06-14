@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.6 - Header Stable During Entry</title>
+  <title>CIE Mobile-First Portal V88.2.7 - Theory Remarks Alignment</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1078,6 +1078,21 @@
     }
 
 
+
+    /* V88.2.7: force practical columns to hide correctly for theory-only papers */
+    #marksTable.hide-practical th.practical-col,
+    #marksTable.hide-practical td.practical-col,
+    #marksTable.hide-theory th.theory-col,
+    #marksTable.hide-theory td.theory-col {
+      display: none !important;
+    }
+
+    #marksTable td.remarks-col,
+    #marksTable th.remarks-col {
+      min-width: 105px;
+    }
+
+
   </style>
 </head>
 <body>
@@ -1170,7 +1185,7 @@
                   <th class="theory-col">Result</th>
                   <th class="practical-col">Practical<br><small id="hPractical">50</small></th>
                   <th class="practical-col">Result</th>
-                  <th>Remarks</th>
+                  <th class="remarks-col">Remarks</th>
                 </tr>
               </thead>
               <tbody id="marksBody"></tbody>
@@ -2466,6 +2481,20 @@
       if (el.marksTable) {
         el.marksTable.classList.toggle('hide-practical', !mode.hasPractical);
         el.marksTable.classList.toggle('hide-theory', !mode.hasTheory);
+
+        // V88.2.7: direct display control prevents practical result cells
+        // from remaining visible under the Remarks header in theory-only papers.
+        el.marksTable.querySelectorAll('.practical-col').forEach(cell => {
+          cell.style.display = mode.hasPractical ? '' : 'none';
+        });
+        el.marksTable.querySelectorAll('.theory-col').forEach(cell => {
+          cell.style.display = mode.hasTheory ? '' : 'none';
+        });
+
+        // Keep remarks always visible and naturally aligned after visible columns.
+        el.marksTable.querySelectorAll('.remarks-col').forEach(cell => {
+          cell.style.display = '';
+        });
       }
     }
 
@@ -2490,7 +2519,7 @@
             <td class="theory-col" data-result="theory">-</td>
             ${practicalInputCell(index, state.courseSettings.practicalMax || 50, m.practicalMarks)}
             <td class="practical-col" data-result="practical">-</td>
-            <td><input class="remark-input" data-field="remarks" value="${escapeAttr(m.remarks || '')}" /></td>
+            <td class="remarks-col"><input class="remark-input" data-field="remarks" value="${escapeAttr(m.remarks || '')}" /></td>
           </tr>`;
       }).join('');
 
