@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.2 - Save Error Clears On Entry</title>
+  <title>CIE Mobile-First Portal V88.2.4 - Save Error Single Region Final</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1421,8 +1421,8 @@
     }
 
     function clearSaveErrorOnEntry() {
-      // V88.2.2: Save Internal / Final Submit validation errors should disappear
-      // as soon as faculty starts correcting or entering marks.
+      // V88.2.4: after Save Internal error, clear all visible error regions
+      // as soon as faculty starts entering/correcting marks.
       if (el.floatingStatus && el.floatingStatus.classList.contains('error')) {
         el.floatingStatus.className = 'floating-status';
         el.floatingStatus.innerHTML = '';
@@ -1435,7 +1435,7 @@
         if (el.tableSuccessNotice.dataset) delete el.tableSuccessNotice.dataset.validationError;
       }
 
-      if (el.marksNotice && el.marksNotice.classList.contains('error') && el.marksNotice.dataset && el.marksNotice.dataset.validationError === '1') {
+      if (el.marksNotice && el.marksNotice.classList.contains('error')) {
         hideNotice(el.marksNotice);
       }
     }
@@ -1740,7 +1740,30 @@
       }
     }
 
+    function showSaveValidationError(message) {
+      // V88.2.4: Save Internal / Final Submit validation error must appear only once.
+      // Hide the top/floating region and the general marks notice, then show one message
+      // inside the marks card.
+      if (el.floatingStatus) {
+        el.floatingStatus.className = 'floating-status';
+        el.floatingStatus.innerHTML = '';
+        window.clearTimeout(el.floatingStatus._hideTimer);
+        if (el.floatingStatus.dataset) delete el.floatingStatus.dataset.validationError;
+      }
+
+      if (el.marksNotice) {
+        hideNotice(el.marksNotice);
+      }
+
+      showTableSuccessMessage(message, 'error');
+    }
+
     function showActionStatus(type, message, autoHideMs = 0) {
+      if (type === 'error') {
+        showSaveValidationError(message);
+        return;
+      }
+
       showTableSuccessMessage(message, type);
 
       if (el.floatingStatus) {
@@ -1748,11 +1771,7 @@
         el.floatingStatus.className = 'floating-status show ' + type;
 
         if (el.floatingStatus.dataset) {
-          if (type === 'error' && isMarkValidationMessage(message)) {
-            el.floatingStatus.dataset.validationError = '1';
-          } else {
-            delete el.floatingStatus.dataset.validationError;
-          }
+          delete el.floatingStatus.dataset.validationError;
         }
 
         window.clearTimeout(el.floatingStatus._hideTimer);
@@ -2535,7 +2554,7 @@
         if (mode.hasTheory) {
           for (const f of ['mid1','mid2','assignments','seminar','attendance']) {
             const item = row.querySelector(`[data-field="${f}"]`);
-            if (!item || item.value === '') throw new Error('Please complete internal marks for ' + reg);
+            if (!item || item.value === '') throw new Error('Please complete required marks entry for ' + reg);
             if (!validateMarkInput(item, false)) throw new Error(`${fieldLabel(f)} cannot be more than ${item.dataset.max} for ${reg}`);
           }
         }
@@ -2559,7 +2578,7 @@
         const result = await savePayloadChunked(buildPayload('Internal Saved'));
         showActionStatus('success', result.message || 'Internal marks saved successfully.', 5500);
       } catch (err) {
-        showActionStatus('error', err.message || String(err));
+        showSaveValidationError(err.message || String(err));
       } finally {
         setBusy(btn, false);
       }
@@ -2585,7 +2604,7 @@
 
         showFinalSuccessModal(result.message || 'Final submit completed successfully. The form will reset after closing this message.');
       } catch (err) {
-        showActionStatus('error', err.message || String(err));
+        showSaveValidationError(err.message || String(err));
         setBusy(btn, false);
       }
     }
