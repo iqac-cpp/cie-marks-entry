@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.1 - Error Auto Clear Fix</title>
+  <title>CIE Mobile-First Portal V88.2.2 - Save Error Clears On Entry</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1420,6 +1420,26 @@
       }
     }
 
+    function clearSaveErrorOnEntry() {
+      // V88.2.2: Save Internal / Final Submit validation errors should disappear
+      // as soon as faculty starts correcting or entering marks.
+      if (el.floatingStatus && el.floatingStatus.classList.contains('error')) {
+        el.floatingStatus.className = 'floating-status';
+        el.floatingStatus.innerHTML = '';
+        if (el.floatingStatus.dataset) delete el.floatingStatus.dataset.validationError;
+      }
+
+      if (el.tableSuccessNotice && el.tableSuccessNotice.classList.contains('error')) {
+        el.tableSuccessNotice.classList.remove('show', 'error');
+        el.tableSuccessNotice.textContent = '';
+        if (el.tableSuccessNotice.dataset) delete el.tableSuccessNotice.dataset.validationError;
+      }
+
+      if (el.marksNotice && el.marksNotice.classList.contains('error') && el.marksNotice.dataset && el.marksNotice.dataset.validationError === '1') {
+        hideNotice(el.marksNotice);
+      }
+    }
+
     function isMarkValidationMessage(message) {
       return /cannot be more than|highlighted mark|Mid Exam|Practical Marks|Assignments|Seminar\/GD|Clean & Green/i.test(String(message || ''));
     }
@@ -1985,6 +2005,7 @@
     }
 
     function handleMarkInput(input) {
+      clearSaveErrorOnEntry();
       const rowIndex = Number(input.closest('tr').dataset.row);
       const ok = validateMarkInput(input, true);
       updateRow(rowIndex);
@@ -2023,6 +2044,7 @@
     }
 
     function handleGradeChange(select) {
+      clearSaveErrorOnEntry();
       select.classList.remove('awaiting-manual-select');
       const rowIndex = Number(select.closest('tr').dataset.row);
       updateRow(rowIndex);
@@ -2342,6 +2364,10 @@
 
       document.querySelectorAll('.grade-select').forEach(select => {
         select.addEventListener('change', () => handleGradeChange(select));
+      });
+
+      document.querySelectorAll('.remark-input').forEach(input => {
+        input.addEventListener('input', clearSaveErrorOnEntry);
       });
 
       applyPaperTypeVisibility();
@@ -2771,6 +2797,9 @@
       });
 
       el.paperCourseName.addEventListener('change', applySelectedPaperDefaults);
+      if (el.facultyName) {
+        el.facultyName.addEventListener('input', clearSaveErrorOnEntry);
+      }
 
       [
         [el.reportAcademicYear, 'academicYear'],
