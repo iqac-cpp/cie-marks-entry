@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V90 - Result Analysis Filter Fix</title>
+  <title>CIE Mobile-First Portal V91 - Analysis Filters Stable Load</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -2933,18 +2933,49 @@
     }
 
     async function loadResultAnalysis() {
+      const list = document.getElementById('analysisList');
+
       try {
-        document.getElementById('analysisList').innerHTML = '<div class="notice info show">Loading result analysis...</div>';
+        list.innerHTML = '<div class="notice info show">Loading analysis filters...</div>';
+
+        // V91: load dropdown filters from the already-stable Dashboard API first.
+        // This prevents blank Analysis dropdowns even when no final records exist yet.
+        try {
+          const dashData = await jsonp('getCieStatusDashboardData', {}, 60000);
+          if (dashData && dashData.success) {
+            state.analysisFilterRows = dashData.rows || dashData.dashboard || [];
+            refreshResultAnalysisOptions();
+          }
+        } catch (filterErr) {
+          // Continue to result analysis call; error will be shown if both fail.
+        }
+
+        list.innerHTML = '<div class="notice info show">Loading final submitted result analysis...</div>';
+
         const data = await jsonp('getResultAnalysisData', {}, 60000);
         if (!data.success) throw new Error(data.message || 'Could not load result analysis');
 
         state.analysisRows = data.rows || [];
-        state.analysisFilterRows = data.filterRows || data.courseRows || data.rows || [];
+
+        // Prefer course/filter rows returned by V90+ backend.
+        // If unavailable, retain Dashboard rows already loaded above.
+        if ((data.filterRows || data.courseRows || []).length) {
+          state.analysisFilterRows = data.filterRows || data.courseRows || [];
+        } else if (!state.analysisFilterRows.length) {
+          state.analysisFilterRows = data.rows || [];
+        }
 
         refreshResultAnalysisOptions();
         renderResultAnalysis();
       } catch (err) {
-        document.getElementById('analysisList').innerHTML = `<div class="notice error show">${escapeHtml(err.message || String(err))}</div>`;
+        refreshResultAnalysisOptions();
+
+        const message = err && err.message ? err.message : String(err);
+        const backendHint = /unknown action|getResultAnalysisData|result analysis/i.test(message)
+          ? '<br><br><b>Note:</b> Dropdown filters are loaded from Dashboard data. For result analysis values, please replace Apps Script <b>Code.gs V91</b> and deploy a new Web App version.'
+          : '';
+
+        list.innerHTML = `<div class="notice error show">${escapeHtml(message)}${backendHint}</div>`;
       }
     }
 
