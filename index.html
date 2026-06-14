@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.1 - Student Admission No Hidden</title>
+  <title>CIE Mobile-First Portal V88.2 - Numeric Keypad Flow</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1975,10 +1975,22 @@
       const mode = getMode();
 
       // Theory + Practical: after SEE grade, go smoothly to Practical Marks.
+      // V88.2: on mobile, focus Practical Marks immediately so numeric keypad opens.
       if (mode.hasPractical) {
         const practical = select.closest('tr').querySelector('[data-field="practicalMarks"]');
         if (practical) {
-          setTimeout(() => smoothFocusControl(practical), isMobileView() ? 180 : 120);
+          if (isMobileView()) {
+            try {
+              practical.focus({ preventScroll: true });
+              if (typeof practical.setSelectionRange === 'function') {
+                const len = practical.value.length;
+                practical.setSelectionRange(len, len);
+              }
+            } catch (err) {}
+            setTimeout(() => smoothFocusControl(practical), 70);
+          } else {
+            setTimeout(() => smoothFocusControl(practical), 120);
+          }
         }
         return;
       }
@@ -2284,7 +2296,9 @@
     function inputCell(row, field, max, value = '', cellClass = '') {
       const hint = field === 'attendance' ? 'done' : 'next';
       const allowAB = fieldAllowsAB(field);
-      const mode = allowAB ? 'text' : 'numeric';
+      // V88.2: keep numeric keypad for Mid-1 and Mid-2.
+      // AB is still accepted if typed manually, pasted, or entered after switching keyboard.
+      const mode = 'numeric';
       const pattern = allowAB ? '[0-9AaBb]*' : '[0-9]*';
       return `<td class="${cellClass}"><input class="mark-input" inputmode="${mode}" pattern="${pattern}" enterkeyhint="${hint}" autocomplete="off" data-field="${field}" data-max="${max}" data-row="${row}" ${allowAB ? 'data-allow-ab="true"' : ''} value="${escapeAttr(value)}"/></td>`;
     }
