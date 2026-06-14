@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V84 - Desktop Row Flow</title>
+  <title>CIE Mobile-First Portal V85 - Auto Hide Corrected Error</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1358,6 +1358,34 @@
       box.style.display = '';
       box.className = 'notice ' + type + ' show';
       box.innerHTML = message;
+      if (box.dataset) {
+        delete box.dataset.validationError;
+      }
+    }
+
+    function hideNotice(box) {
+      if (!box) return;
+      box.classList.remove('show');
+      box.style.display = 'none';
+      box.innerHTML = '';
+      if (box.dataset) {
+        delete box.dataset.validationError;
+      }
+    }
+
+    function showMarkValidationNotice(message) {
+      showNotice(el.marksNotice, 'error', message);
+      if (el.marksNotice && el.marksNotice.dataset) {
+        el.marksNotice.dataset.validationError = '1';
+      }
+    }
+
+    function clearMarkValidationNoticeIfResolved() {
+      if (!el.marksNotice || !el.marksNotice.dataset || el.marksNotice.dataset.validationError !== '1') return;
+      const stillInvalid = !!document.querySelector('#marksBody .mark-input.input-error');
+      if (!stillInvalid) {
+        hideNotice(el.marksNotice);
+      }
     }
 
     function setBusy(button, busy, text) {
@@ -1416,6 +1444,7 @@
 
       if (input.value === '') {
         input.classList.remove('input-error');
+        clearMarkValidationNoticeIfResolved();
         return true;
       }
 
@@ -1423,12 +1452,13 @@
       if (!Number.isFinite(n) || n < 0 || n > max) {
         input.classList.add('input-error');
         if (showMessageFlag) {
-          showNotice(el.marksNotice, 'error', `${fieldLabel(field)} cannot be more than ${max}. Please correct the highlighted mark.`);
+          showMarkValidationNotice(`${fieldLabel(field)} cannot be more than ${max}. Please correct the highlighted mark.`);
         }
         return false;
       }
 
       input.classList.remove('input-error');
+      clearMarkValidationNoticeIfResolved();
       return true;
     }
 
@@ -1709,6 +1739,9 @@
 
       if (el.tableSuccessNotice) el.tableSuccessNotice.classList.remove('show');
       if (el.floatingStatus) el.floatingStatus.className = 'floating-status';
+      if (el.marksNotice && el.marksNotice.dataset && el.marksNotice.dataset.validationError === '1') {
+        hideNotice(el.marksNotice);
+      }
     }
 
     function confirmClearTableData() {
