@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2 - Numeric Keypad Flow</title>
+  <title>CIE Mobile-First Portal V88.2.1 - Error Auto Clear Fix</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -1406,19 +1406,54 @@
       }
     }
 
+    function hideFloatingValidationError() {
+      if (el.floatingStatus && el.floatingStatus.dataset && el.floatingStatus.dataset.validationError === '1') {
+        el.floatingStatus.className = 'floating-status';
+        el.floatingStatus.innerHTML = '';
+        delete el.floatingStatus.dataset.validationError;
+      }
+
+      if (el.tableSuccessNotice && el.tableSuccessNotice.dataset && el.tableSuccessNotice.dataset.validationError === '1') {
+        el.tableSuccessNotice.classList.remove('show');
+        el.tableSuccessNotice.textContent = '';
+        delete el.tableSuccessNotice.dataset.validationError;
+      }
+    }
+
+    function isMarkValidationMessage(message) {
+      return /cannot be more than|highlighted mark|Mid Exam|Practical Marks|Assignments|Seminar\/GD|Clean & Green/i.test(String(message || ''));
+    }
+
     function showMarkValidationNotice(message) {
+      // V88.2.1: show mark-entry validation in one region only.
+      // This avoids the same error appearing both above the form and inside/floating over the table.
       showNotice(el.marksNotice, 'error', message);
       if (el.marksNotice && el.marksNotice.dataset) {
         el.marksNotice.dataset.validationError = '1';
       }
+
+      // Remove duplicate validation error regions, if any older Save/Submit error is still visible.
+      if (el.floatingStatus) {
+        el.floatingStatus.className = 'floating-status';
+        el.floatingStatus.innerHTML = '';
+        if (el.floatingStatus.dataset) delete el.floatingStatus.dataset.validationError;
+      }
+      if (el.tableSuccessNotice) {
+        el.tableSuccessNotice.classList.remove('show');
+        el.tableSuccessNotice.textContent = '';
+        if (el.tableSuccessNotice.dataset) delete el.tableSuccessNotice.dataset.validationError;
+      }
     }
 
     function clearMarkValidationNoticeIfResolved() {
-      if (!el.marksNotice || !el.marksNotice.dataset || el.marksNotice.dataset.validationError !== '1') return;
       const stillInvalid = !!document.querySelector('#marksBody .mark-input.input-error');
-      if (!stillInvalid) {
+      if (stillInvalid) return;
+
+      if (el.marksNotice && el.marksNotice.dataset && el.marksNotice.dataset.validationError === '1') {
         hideNotice(el.marksNotice);
       }
+
+      hideFloatingValidationError();
     }
 
     function setBusy(button, busy, text) {
@@ -1675,6 +1710,14 @@
       if (!el.tableSuccessNotice) return;
       el.tableSuccessNotice.textContent = message;
       el.tableSuccessNotice.className = 'table-success show ' + type;
+
+      if (el.tableSuccessNotice.dataset) {
+        if (type === 'error' && isMarkValidationMessage(message)) {
+          el.tableSuccessNotice.dataset.validationError = '1';
+        } else {
+          delete el.tableSuccessNotice.dataset.validationError;
+        }
+      }
     }
 
     function showActionStatus(type, message, autoHideMs = 0) {
@@ -1684,10 +1727,19 @@
         el.floatingStatus.innerHTML = message;
         el.floatingStatus.className = 'floating-status show ' + type;
 
+        if (el.floatingStatus.dataset) {
+          if (type === 'error' && isMarkValidationMessage(message)) {
+            el.floatingStatus.dataset.validationError = '1';
+          } else {
+            delete el.floatingStatus.dataset.validationError;
+          }
+        }
+
         window.clearTimeout(el.floatingStatus._hideTimer);
         if (autoHideMs) {
           el.floatingStatus._hideTimer = window.setTimeout(() => {
             el.floatingStatus.className = 'floating-status';
+            if (el.floatingStatus.dataset) delete el.floatingStatus.dataset.validationError;
           }, autoHideMs);
         }
       }
@@ -1938,6 +1990,9 @@
       updateRow(rowIndex);
 
       if (!ok) return;
+
+      // V88.2.1: after the wrong mark is corrected, remove validation messages immediately.
+      clearMarkValidationNoticeIfResolved();
 
       const mode = getMode();
       const field = input.dataset.field || '';
