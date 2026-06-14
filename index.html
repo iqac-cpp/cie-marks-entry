@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.4 - Save Error Single Region Final</title>
+  <title>CIE Mobile-First Portal V88.2.5 - Sticky Marks Header</title>
   <meta name="theme-color" content="#123c7c" />
 
   <style>
@@ -993,6 +993,53 @@
         display: none;
       }
     }
+
+
+    /* V88.2.5: keep marks-entry header stable below the progress bar */
+    #marksCard .marks-wrap {
+      position: relative;
+      overflow: auto;
+      max-height: min(62vh, 620px);
+      scrollbar-gutter: stable;
+    }
+
+    #marksCard table.excel-grid thead th {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: #e8f1ff;
+      box-shadow: 0 2px 0 #c7d3e4, 0 8px 14px rgba(20, 50, 90, 0.08);
+    }
+
+    #marksCard table.excel-grid thead th.sticky-col,
+    #marksCard table.excel-grid thead th.sticky-name {
+      z-index: 40;
+      background: #dceaff;
+    }
+
+    #marksCard table.excel-grid tbody td.sticky-col,
+    #marksCard table.excel-grid tbody td.sticky-name {
+      z-index: 12;
+    }
+
+    @media (max-width: 480px) {
+      #marksCard .marks-wrap {
+        max-height: calc(100svh - var(--marks-table-offset, 330px));
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #marksCard table.excel-grid thead th {
+        top: 0;
+        z-index: 34;
+      }
+
+      #marksCard table.excel-grid thead th.sticky-col,
+      #marksCard table.excel-grid thead th.sticky-name {
+        z-index: 45;
+      }
+    }
+
 
   </style>
 </head>
