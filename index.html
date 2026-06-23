@@ -3,8 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.7 - Theory Remarks Alignment</title>
+  <title>CIE Mobile-First Portal V88.2.9 - Android Chrome Stable Open</title>
   <meta name="theme-color" content="#123c7c" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    (function () {
+      var APP_VERSION_QUERY = "8829";
+      try {
+        var search = window.location.search || "";
+        if (search.indexOf("v=" + APP_VERSION_QUERY) === -1 && search.indexOf("nofresh=1") === -1) {
+          var freshUrl = window.location.origin + window.location.pathname + "?v=" + APP_VERSION_QUERY + "&t=" + Date.now() + (window.location.hash || "");
+          window.location.replace(freshUrl);
+        }
+      } catch (err) {}
+    })();
+  </script>
 
   <style>
     :root {
@@ -1291,6 +1306,60 @@
 
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbwKSjV6K7wTSqcY1VCnE1szl1PDc9OFHb4fxgwkCTpIp-Ycovmg56qVLXjiNk9T6T0G/exec";
+    const APP_VERSION = "V88.2.9-ANDROID-CHROME-STABLE-OPEN";
+
+    (function stabilizeAndroidChrome() {
+      // Android Chrome normal mode can keep old GitHub Pages HTML/site data.
+      // Incognito works because it starts with fresh data. This keeps normal mode fresh too.
+      try {
+        if (typeof Object.assign !== 'function') {
+          Object.assign = function (target) {
+            if (target == null) throw new TypeError('Cannot convert undefined or null to object');
+            var output = Object(target);
+            for (var i = 1; i < arguments.length; i++) {
+              var source = arguments[i];
+              if (source != null) {
+                for (var key in source) {
+                  if (Object.prototype.hasOwnProperty.call(source, key)) output[key] = source[key];
+                }
+              }
+            }
+            return output;
+          };
+        }
+
+        var key = "CIE_ACTIVE_APP_VERSION";
+        var previous = "";
+        try { previous = localStorage.getItem(key) || ""; } catch (err) {}
+
+        if (previous !== APP_VERSION) {
+          try { localStorage.setItem(key, APP_VERSION); } catch (err) {}
+          try { sessionStorage.clear(); } catch (err) {}
+
+          if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+            navigator.serviceWorker.getRegistrations().then(function (registrations) {
+              registrations.forEach(function (registration) {
+                try { registration.unregister(); } catch (err) {}
+              });
+            }).catch(function () {});
+          }
+
+          if (window.caches && typeof caches.keys === "function") {
+            caches.keys().then(function (keys) {
+              keys.forEach(function (name) {
+                if (/cie|iqac|github|marks|app/i.test(name)) {
+                  try { caches.delete(name); } catch (err) {}
+                }
+              });
+            }).catch(function () {});
+          }
+        }
+
+        window.addEventListener("pageshow", function (event) {
+          if (event.persisted) window.location.reload();
+        });
+      } catch (err) {}
+    })();
     const VALID_GRADES = ['O', 'A+', 'A', 'B+', 'B', 'C', 'P', 'F', 'AB'];
     const GRADE_PERCENT = { 'O': 100, 'A+': 90, 'A': 80, 'B+': 70, 'B': 60, 'C': 55, 'P': 50, 'F': 0, 'AB': 0 };
 
@@ -1345,11 +1414,32 @@
       dashStatus: document.getElementById('dashStatus')
     };
 
+    function removeElement(node) {
+      try {
+        if (node && node.parentNode) node.parentNode.removeChild(node);
+      } catch (err) {}
+    }
+
+    function toQueryString(params) {
+      params = params || {};
+      if (typeof URLSearchParams !== 'undefined') {
+        return new URLSearchParams(params).toString();
+      }
+
+      var parts = [];
+      for (var key in params) {
+        if (Object.prototype.hasOwnProperty.call(params, key)) {
+          parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key] == null ? '' : params[key]));
+        }
+      }
+      return parts.join('&');
+    }
+
     function jsonp(action, params = {}, timeoutMs = 45000) {
       return new Promise((resolve, reject) => {
         const callback = 'cie_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
         const script = document.createElement('script');
-        const query = new URLSearchParams(Object.assign({ action, callback }, params));
+        const query = toQueryString(Object.assign({ action, callback, _v: APP_VERSION, _ts: Date.now() }, params));
         let done = false;
 
         window[callback] = (data) => {
@@ -1360,7 +1450,7 @@
 
         function cleanup() {
           try { delete window[callback]; } catch (e) { window[callback] = undefined; }
-          script.remove();
+          removeElement(script);
           clearTimeout(timer);
         }
 
@@ -1376,7 +1466,7 @@
           reject(new Error('Request timed out. Please check internet connection.'));
         }, timeoutMs);
 
-        script.src = API_BASE + '?' + query.toString();
+        script.src = API_BASE + '?' + query;
         document.body.appendChild(script);
       });
     }
@@ -1435,7 +1525,7 @@
 
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = API_BASE;
+        form.action = API_BASE + '?_v=' + encodeURIComponent(APP_VERSION) + '&_ts=' + Date.now();
         form.target = iframeName;
         form.style.display = 'none';
 
@@ -1449,8 +1539,8 @@
 
         function cleanup() {
           setTimeout(() => {
-            try { form.remove(); } catch (err) {}
-            try { iframe.remove(); } catch (err) {}
+            removeElement(form);
+            removeElement(iframe);
           }, 800);
         }
 
@@ -2306,12 +2396,14 @@
     }
 
     function selectedPaper() {
-      const idx = el.paperCourseName.options[el.paperCourseName.selectedIndex]?.dataset.index;
+      const option = el.paperCourseName.options[el.paperCourseName.selectedIndex];
+      const idx = option && option.dataset ? option.dataset.index : undefined;
       return idx !== undefined ? state.papers[Number(idx)] : null;
     }
 
     function selectedReportPaper() {
-      const idx = el.reportPaperCourseName.options[el.reportPaperCourseName.selectedIndex]?.dataset.index;
+      const option = el.reportPaperCourseName.options[el.reportPaperCourseName.selectedIndex];
+      const idx = option && option.dataset ? option.dataset.index : undefined;
       return idx !== undefined ? state.reportPapers[Number(idx)] : null;
     }
 
@@ -2641,7 +2733,8 @@
           const item = row.querySelector(`[data-field="${f}"]`);
           return item && item.value !== '' && !item.classList.contains('input-error');
         });
-        const gradeOk = !mode.hasTheory || row.querySelector('[data-field="seeTheory"]')?.value;
+        const gradeSelectItem = row.querySelector('[data-field="seeTheory"]');
+        const gradeOk = !mode.hasTheory || (gradeSelectItem && gradeSelectItem.value);
         const practicalItem = row.querySelector('[data-field="practicalMarks"]');
         const practicalOk = !mode.hasPractical || (practicalItem && practicalItem.value !== '' && !practicalItem.classList.contains('input-error'));
         if (internalOk && gradeOk && practicalOk) completed++;
@@ -2682,7 +2775,10 @@
         },
         rows: state.students.map((s, index) => {
           const row = document.querySelector(`tr[data-row="${index}"]`);
-          const get = field => row.querySelector(`[data-field="${field}"]`)?.value || '';
+          const get = field => {
+            const item = row.querySelector(`[data-field="${field}"]`);
+            return item ? (item.value || '') : '';
+          };
           return {
             studentAdmnNo: s.studentAdmnNo,
             studentName: s.studentName,
@@ -2960,7 +3056,7 @@
     }
 
     function escapeHtml(value) {
-      return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+      return String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
     function escapeAttr(value) { return escapeHtml(value); }
 
