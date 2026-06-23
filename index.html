@@ -428,9 +428,10 @@
 
     .marks-wrap {
       width: 100%;
-      overflow-x: auto;
-      overscroll-behavior-x: contain;
-      scroll-snap-type: x proximity;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior-x: none;
+      touch-action: pan-y;
       border: 1px solid var(--border);
       border-radius: 18px;
       background: #fff;
@@ -881,8 +882,10 @@
         border-radius: 8px;
         max-height: calc(100svh - var(--marks-table-offset, 330px));
         overflow-y: auto;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+        touch-action: pan-y;
       }
 
       table.excel-grid {
@@ -1145,7 +1148,7 @@
           <div id="tableSuccessNotice" class="table-success"></div>
           <div class="table-tools">
             <span class="student-chip" id="paperModeChip">Fast Entry Mode</span>
-            <span class="swipe-note">Swipe table →</span>
+            <span class="swipe-note"></span>
           </div>
 
           <div class="progress-panel" id="marksProgressCard">
@@ -1745,9 +1748,7 @@
       const cellRect = cell.getBoundingClientRect();
 
       // Horizontal movement: keep the active marks cell after frozen S.No + Student columns.
-      const stickyOffset = isMobileView() ? 150 : 276;
-      const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
-      wrap.scrollLeft = Math.max(0, targetLeft);
+      // Horizontal auto-scroll disabled for mobile marks entry
 
       // Vertical movement: scroll only inside the marks table, not the full page.
       // This keeps the progress bar and header in the same stable position.
