@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.9 - Android Chrome Stable Open</title>
+  <title>CIE Mobile-First Portal V88.2.11 - Stable Mobile Marks Workspace</title>
   <meta name="theme-color" content="#123c7c" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <script>
     (function () {
-      var APP_VERSION_QUERY = "8829";
+      var APP_VERSION_QUERY = "88211";
       try {
         var search = window.location.search || "";
         if (search.indexOf("v=" + APP_VERSION_QUERY) === -1 && search.indexOf("nofresh=1") === -1) {
@@ -1111,6 +1111,274 @@
     }
 
 
+    /* V88.2.10: accessible mobile-only marks-entry workspace.
+       The progress panel and the column heading row share one fixed viewport,
+       with only student rows scrolling underneath the headings. */
+    .entry-view-actions { display: flex; align-items: center; gap: 6px; }
+    .entry-view-btn {
+      border: 1px solid #cddcf1;
+      border-radius: 10px;
+      color: #123c7c;
+      background: #eef5ff;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 800;
+      min-height: 34px;
+      touch-action: manipulation;
+    }
+    .entry-view-btn.entry-open, .entry-view-btn.entry-exit { display: none; }
+    .mobile-entry-notice { display: none; }
+    .mark-input.entry-ready {
+      outline: 2px solid #6594d9;
+      outline-offset: -2px;
+      background: #eef5ff;
+    }
+    body.cie-entry-active .mobile-entry-notice.show {
+      display: block;
+      flex: 0 0 auto;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.25;
+      margin: 0 0 5px;
+      color: #a51f1f;
+      border: 1px solid #f5c8c8;
+      border-radius: 8px;
+      background: #fff1f1;
+    }
+
+    @media (max-width: 760px) {
+      #mobileEntryOpenBtn { display: inline-flex; align-items: center; }
+      html.cie-entry-active, body.cie-entry-active {
+        overflow: hidden !important;
+        overscroll-behavior: none;
+      }
+      body.cie-entry-active #marksCard {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: var(--cie-entry-viewport-top, 0px) !important;
+        width: 100% !important;
+        height: var(--cie-entry-viewport-height, 100dvh) !important;
+        min-height: 0 !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 7px 8px 9px !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: #f9fbff;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+        z-index: 120;
+      }
+      body.cie-entry-active #marksCard .table-tools {
+        flex: 0 0 auto;
+        min-height: 36px;
+        margin: 0 0 5px;
+        padding: 0;
+      }
+      body.cie-entry-active #marksCard .student-chip {
+        max-width: 52%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      body.cie-entry-active #mobileEntryOpenBtn { display: none; }
+      body.cie-entry-active #mobileEntryExitBtn {
+        display: inline-flex;
+        align-items: center;
+        background: #123c7c;
+        color: white;
+        border-color: #123c7c;
+      }
+      body.cie-entry-active #tableSuccessNotice { display: none !important; }
+      body.cie-entry-active #marksProgressCard {
+        position: relative !important;
+        top: auto !important;
+        bottom: auto !important;
+        z-index: 1 !important;
+        flex: 0 0 auto !important;
+        margin: 0 0 7px !important;
+        padding: 8px 10px !important;
+        box-shadow: 0 1px 5px rgba(17, 48, 91, .10) !important;
+        background: #f4f8ff !important;
+      }
+      body.cie-entry-active #marksProgressCard .progress-meta { display: none !important; }
+      body.cie-entry-active #marksCard .marks-wrap {
+        position: relative !important;
+        flex: 1 1 0 !important;
+        min-height: 74px !important;
+        height: auto !important;
+        max-height: none !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        touch-action: pan-x pan-y;
+        scroll-behavior: auto;
+        scroll-padding-top: 65px;
+        border-radius: 8px;
+      }
+      body.cie-entry-active #marksCard table.excel-grid thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 80 !important;
+        background: #e4efff !important;
+        box-shadow: inset 0 -2px 0 #b0c9e8 !important;
+      }
+      body.cie-entry-active #marksCard table.excel-grid thead th.sticky-name,
+      body.cie-entry-active #marksCard table.excel-grid thead th.sticky-col {
+        z-index: 90 !important;
+        background: #d6e6fb !important;
+      }
+      body.cie-entry-active #marksCard .action-row { display: none !important; }
+      body.cie-entry-active #marksCard .mark-input:focus,
+      body.cie-entry-active #marksCard .remark-input:focus,
+      body.cie-entry-active #marksCard .grade-select:focus {
+        background: #fff !important;
+        outline: 2px solid #2464bb !important;
+        outline-offset: -2px;
+      }
+    }
+
+
+    /* V88.2.11: coherent sticky layer and scroll layout */
+    :root { --cie-sno-col: 50px; --cie-student-col: 206px; }
+    @media (min-width:760px) {
+      .bottom-nav { position: relative !important; top: auto !important; bottom: auto !important; z-index: 2 !important; }
+    }
+    #marksCard .marks-wrap {
+      position: relative; width:100%; height:min(62vh,600px); min-height:240px;
+      max-height:600px; overflow-x:auto !important; overflow-y:auto !important;
+      overscroll-behavior:contain; touch-action:pan-x pan-y;
+      -webkit-overflow-scrolling:touch; scroll-behavior:auto;
+      scroll-padding-top:58px;
+    }
+    #marksTable.excel-grid {
+      width:max-content; min-width:100%; table-layout:fixed;
+      border-collapse:separate; border-spacing:0;
+    }
+    #marksTable.excel-grid th,#marksTable.excel-grid td {box-sizing:border-box;}
+    #marksTable.excel-grid .sticky-col {
+      position:sticky !important; left:0 !important;
+      width:var(--cie-sno-col) !important; min-width:var(--cie-sno-col) !important;
+      max-width:var(--cie-sno-col) !important; background:#f7fbff;
+    }
+    #marksTable.excel-grid .sticky-name {
+      position:sticky !important; left:var(--cie-sno-col) !important;
+      width:var(--cie-student-col) !important; min-width:var(--cie-student-col) !important;
+      max-width:var(--cie-student-col) !important;
+      background:#f7fbff; overflow-wrap:anywhere;
+    }
+    #marksTable.excel-grid tbody td { position:relative; z-index:1; }
+    #marksTable.excel-grid tbody td.sticky-col,
+    #marksTable.excel-grid tbody td.sticky-name { z-index:12 !important; }
+    #marksTable.excel-grid thead th {
+      position:sticky !important; top:0 !important; z-index:22 !important;
+      background:#e8f1ff !important; box-shadow:inset 0 -2px 0 #bacde5;
+    }
+    #marksTable.excel-grid thead th.sticky-col,
+    #marksTable.excel-grid thead th.sticky-name { z-index:32 !important; background:#dceaff !important; }
+    #marksTable.excel-grid .mark-input:focus,
+    #marksTable.excel-grid .grade-select:focus,
+    #marksTable.excel-grid .remark-input:focus {
+      outline:none !important; box-shadow:inset 0 0 0 2px #205bb2 !important;
+      background:#fff !important; position:relative; z-index:1;
+    }
+    #marksTable.excel-grid td:nth-child(3),
+    #marksTable.excel-grid th:nth-child(3) {width:66px;min-width:66px;max-width:66px;}
+    #marksTable.excel-grid .grade-select {min-width:85px;width:100%;}
+    #marksTable.excel-grid .mark-input {min-width:0;width:100%;}
+    .entry-active-label {
+      display:none;min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap;color:#183f7c;font-size:12px;font-weight:800;padding-left:4px;
+    }
+    @media (max-width:760px) {
+      :root { --cie-sno-col:42px; --cie-student-col:138px; }
+      #marksCard .marks-wrap {height:min(52svh,440px);min-height:180px;max-height:440px;}
+      #marksTable.excel-grid {min-width:1050px;}
+      #marksTable.excel-grid th:nth-child(3),
+      #marksTable.excel-grid td:nth-child(3) {width:62px;min-width:62px;max-width:62px;}
+      #marksTable.excel-grid .sticky-name {font-size:11px;line-height:1.15;}
+      #marksTable.excel-grid .reg {font-size:10px;}
+      #marksCard #marksProgressCard {position:static;top:auto;}
+      body.cie-entry-active .bottom-nav {display:none !important;}
+      body.cie-entry-active .app-header {visibility:hidden;pointer-events:none;}
+      body.cie-entry-active #marksCard {
+        top:var(--cie-entry-viewport-top,0px) !important;
+        height:var(--cie-entry-viewport-height,100dvh) !important;
+        max-height:var(--cie-entry-viewport-height,100dvh) !important;
+        padding-bottom:calc(7px + env(safe-area-inset-bottom)) !important;
+      }
+      body.cie-entry-active #marksCard .table-tools {
+        display:flex;gap:6px;flex:0 0 auto;min-height:36px;align-items:center;
+      }
+      body.cie-entry-active #marksCard .student-chip {display:none !important;}
+      body.cie-entry-active #marksCard .entry-active-label {display:block;}
+      body.cie-entry-active #marksProgressCard {
+        position:relative !important;top:auto !important;z-index:1 !important;
+        margin:0 0 6px !important;padding:7px 9px !important;
+        box-shadow:0 1px 4px rgba(20,50,90,.1) !important;
+      }
+      body.cie-entry-active #marksProgressCard .progress-title {font-size:13px;}
+      body.cie-entry-active #marksProgressCard .progress-subtitle {font-size:11px;}
+      body.cie-entry-active #marksProgressCard .progress-percent {font-size:17px;}
+      body.cie-entry-active #marksProgressCard .progress-track {height:8px;}
+      body.cie-entry-active #marksCard .marks-wrap {
+        flex:1 1 0 !important;min-height:66px !important;height:auto !important;
+        max-height:none !important;overflow-x:auto !important;overflow-y:auto !important;
+        scroll-padding-top:60px;touch-action:pan-x pan-y;
+      }
+      body.cie-entry-active #marksTable.excel-grid thead th {
+        position:sticky !important;top:0 !important;z-index:22 !important;
+      }
+      body.cie-entry-active #marksTable.excel-grid thead th.sticky-col,
+      body.cie-entry-active #marksTable.excel-grid thead th.sticky-name {z-index:32 !important;}
+      body.cie-entry-active #marksTable.excel-grid tbody td.sticky-col,
+      body.cie-entry-active #marksTable.excel-grid tbody td.sticky-name {z-index:12 !important;}
+    }
+    @media (max-height:440px) and (max-width:759px) {
+      body.cie-entry-active #marksCard .table-tools {min-height:31px;}
+      body.cie-entry-active #marksProgressCard {padding:5px 8px !important;margin-bottom:4px !important;}
+      body.cie-entry-active #marksCard .marks-wrap {min-height:56px !important;}
+    }
+
+
+    /* V88.2.11 cell sizing: prevent practical and grade cells expanding into
+       huge horizontal columns on some Android and desktop browsers. */
+    #marksTable.excel-grid th:not(.sticky-col):not(.sticky-name),
+    #marksTable.excel-grid td:not(.sticky-col):not(.sticky-name) {
+      width: 66px !important; min-width: 66px !important; max-width: 66px !important;
+      overflow-wrap: anywhere;
+    }
+    #marksTable.excel-grid th:nth-child(11),
+    #marksTable.excel-grid td:nth-child(11) {
+      width: 94px !important; min-width: 94px !important; max-width: 94px !important;
+    }
+    #marksTable.excel-grid th:nth-child(15),
+    #marksTable.excel-grid td:nth-child(15) {
+      width: 75px !important; min-width: 75px !important; max-width: 75px !important;
+    }
+    #marksTable.excel-grid th:nth-child(17),
+    #marksTable.excel-grid td:nth-child(17) {
+      width: 118px !important; min-width: 118px !important; max-width: 118px !important;
+    }
+    #marksTable.excel-grid .mark-input,
+    #marksTable.excel-grid .grade-select,
+    #marksTable.excel-grid .remark-input {
+      min-width: 0 !important; width: 100% !important; max-width: 100% !important;
+      box-sizing: border-box;
+    }
+    @media (max-width:760px) {
+      #marksTable.excel-grid th:nth-child(3),
+      #marksTable.excel-grid td:nth-child(3) {
+        width: 66px !important; min-width: 66px !important; max-width: 66px !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1163,8 +1431,13 @@
           <div id="tableSuccessNotice" class="table-success"></div>
           <div class="table-tools">
             <span class="student-chip" id="paperModeChip">Fast Entry Mode</span>
-            <span class="swipe-note"></span>
+            <span id="entryActiveLabel" class="entry-active-label" aria-live="off">Select a marks cell</span>
+            <div class="entry-view-actions">
+              <button id="mobileEntryOpenBtn" class="entry-view-btn entry-open" type="button" onclick="openMobileEntryMode()">Full-screen entry</button>
+              <button id="mobileEntryExitBtn" class="entry-view-btn entry-exit" type="button" onclick="closeMobileEntryMode()">Done ✓</button>
+            </div>
           </div>
+          <div id="mobileEntryNotice" class="mobile-entry-notice" role="alert" aria-live="polite"></div>
 
           <div class="progress-panel" id="marksProgressCard">
           <div class="progress-head">
@@ -1306,7 +1579,7 @@
 
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbwKSjV6K7wTSqcY1VCnE1szl1PDc9OFHb4fxgwkCTpIp-Ycovmg56qVLXjiNk9T6T0G/exec";
-    const APP_VERSION = "V88.2.9-ANDROID-CHROME-STABLE-OPEN";
+    const APP_VERSION = "V88.2.11-STABLE-MOBILE-MARKS-WORKSPACE";
 
     (function stabilizeAndroidChrome() {
       // Android Chrome normal mode can keep old GitHub Pages HTML/site data.
@@ -1433,6 +1706,100 @@
         }
       }
       return parts.join('&');
+    }
+
+    // V88.2.10: controlled mobile workspace keeps the progress meter and
+    // table headings on-screen together even when Android opens the keyboard.
+    let mobileEntryActive = false;
+    let mobileEntryTouchedControl = null;
+    let mobileEntryOriginalScrollTop = 0;
+    let mobileEntryAdjustTimer = null;
+
+    function showMobileEntryValidation(message) {
+      const banner = document.getElementById('mobileEntryNotice');
+      if (banner && mobileEntryActive) {
+        banner.textContent = message || '';
+        banner.classList.toggle('show', !!message);
+      }
+    }
+
+    function mobileEntryVisible() {
+      return isMobileView() && !!(el.marksCard && el.marksCard.style.display !== 'none' && state.students.length);
+    }
+
+    function updateMobileEntryViewport() {
+      if (!mobileEntryActive) return;
+      const vv = window.visualViewport;
+      const top = vv ? vv.offsetTop : 0;
+      const height = vv ? vv.height : window.innerHeight;
+      document.documentElement.style.setProperty('--cie-entry-viewport-top', Math.max(0, Math.round(top)) + 'px');
+      document.documentElement.style.setProperty('--cie-entry-viewport-height', Math.max(140, Math.round(height)) + 'px');
+      window.clearTimeout(mobileEntryAdjustTimer);
+      mobileEntryAdjustTimer = window.setTimeout(() => {
+        const control = document.activeElement;
+        if (control && control.closest && control.closest('#marksBody')) keepMarksHeaderStableForControl(control);
+      }, 100);
+    }
+
+    function openMobileEntryMode(control) {
+      if (!mobileEntryVisible()) return;
+      if (!mobileEntryActive) {
+        mobileEntryOriginalScrollTop = window.pageYOffset || 0;
+        mobileEntryActive = true;
+        document.documentElement.classList.add('cie-entry-active');
+        document.body.classList.add('cie-entry-active');
+      }
+      updateMobileEntryViewport();
+      if (control && control.focus) {
+        // Keep the element focused without letting Chrome scroll the whole document.
+        try { control.focus({ preventScroll: true }); } catch (e) { control.focus(); }
+        window.setTimeout(function () { keepMarksHeaderStableForControl(control); }, 40);
+        window.setTimeout(function () { keepMarksHeaderStableForControl(control); }, 300);
+      }
+    }
+
+    function closeMobileEntryMode() {
+      if (!mobileEntryActive) return;
+      const focused = document.activeElement;
+      if (focused && focused.closest && focused.closest('#marksBody') && focused.blur) focused.blur();
+      mobileEntryActive = false;
+      document.documentElement.classList.remove('cie-entry-active');
+      document.body.classList.remove('cie-entry-active');
+      document.documentElement.style.removeProperty('--cie-entry-viewport-top');
+      document.documentElement.style.removeProperty('--cie-entry-viewport-height');
+      window.clearTimeout(mobileEntryAdjustTimer);
+      const banner = document.getElementById('mobileEntryNotice');
+      if (banner) { banner.textContent = ''; banner.classList.remove('show'); }
+      window.setTimeout(function () {
+        window.scrollTo(0, mobileEntryOriginalScrollTop);
+        updateStickyProgressTop();
+      }, 60);
+    }
+
+    function wireMobileEntryEvents() {
+      if (!el.marksBody) return;
+      const rememberTap = function (event) {
+        const target = event.target;
+        if (target && target.closest) {
+          mobileEntryTouchedControl = target.closest('.mark-input, .grade-select, .remark-input');
+        }
+      };
+      el.marksBody.addEventListener('pointerdown', rememberTap, { passive: true });
+      el.marksBody.addEventListener('touchstart', rememberTap, { passive: true });
+      el.marksBody.addEventListener('focusin', function (event) {
+        const target = event.target;
+        if (!target || !target.matches || !target.matches('.mark-input, .grade-select, .remark-input')) return;
+        // Initial programmatic autofocus after loading a paper must not suddenly
+        // launch full-screen entry; only a tap or an already-open entry mode does.
+        if (mobileEntryActive || mobileEntryTouchedControl === target) openMobileEntryMode(target);
+        mobileEntryTouchedControl = null;
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateMobileEntryViewport);
+        window.visualViewport.addEventListener('scroll', updateMobileEntryViewport);
+      }
+      window.addEventListener('orientationchange', updateMobileEntryViewport);
+      window.addEventListener('resize', updateMobileEntryViewport);
     }
 
     function jsonp(action, params = {}, timeoutMs = 45000) {
@@ -1630,6 +1997,7 @@
       if (el.marksNotice && el.marksNotice.classList.contains('error')) {
         hideNotice(el.marksNotice);
       }
+      showMobileEntryValidation('');
     }
 
     function isMarkValidationMessage(message) {
@@ -1640,6 +2008,7 @@
       // V88.2.1: show mark-entry validation in one region only.
       // This avoids the same error appearing both above the form and inside/floating over the table.
       showNotice(el.marksNotice, 'error', message);
+      showMobileEntryValidation(message);
       if (el.marksNotice && el.marksNotice.dataset) {
         el.marksNotice.dataset.validationError = '1';
       }
@@ -1666,6 +2035,7 @@
       }
 
       hideFloatingValidationError();
+      showMobileEntryValidation('');
     }
 
     function setBusy(button, busy, text) {
@@ -1827,57 +2197,63 @@
       return firstEntryControlForRow(rowIndex + 1);
     }
 
-    function keepMarksHeaderStableForControl(control) {
-      if (!control) return;
+    function updateEntryActiveLabel(control) {
+      const label = document.getElementById('entryActiveLabel');
+      if (!label || !control || !control.closest) return;
+      const row = control.closest('tr[data-row]');
+      if (!row) return;
+      const student = row.querySelector('.sticky-name');
+      const name = student ? String(student.firstChild && student.firstChild.textContent || '').trim() : '';
+      const index = Number(row.dataset.row || 0) + 1;
+      const field = control.dataset ? (control.dataset.field || '') : '';
+      const fieldText = field === 'seeTheory' ? 'SEE Grade' : field === 'remarks' ? 'Remarks' : fieldLabel(field);
+      label.textContent = index + '/' + state.students.length + ' · ' + fieldText + (name ? ' · ' + name : '');
+    }
 
+    function keepMarksHeaderStableForControl(control) {
+      if (!control || !control.closest) return;
       const wrap = control.closest('.marks-wrap');
       if (!wrap) return;
-
       const cell = control.closest('td,th') || control;
       const wrapRect = wrap.getBoundingClientRect();
       const cellRect = cell.getBoundingClientRect();
+      const header = wrap.querySelector('thead');
+      const headerHeight = header ? header.getBoundingClientRect().height : 48;
+      const frozenSno = wrap.querySelector('thead .sticky-col');
+      const frozenName = wrap.querySelector('thead .sticky-name');
+      const frozenWidth = (frozenSno ? frozenSno.getBoundingClientRect().width : 42) +
+                          (frozenName ? frozenName.getBoundingClientRect().width : 138);
+      const leftLimit = wrapRect.left + frozenWidth;
+      const rightLimit = wrapRect.right - 8;
+      const topLimit = wrapRect.top + headerHeight + 4;
+      const bottomLimit = wrapRect.bottom - 6;
 
-      // Horizontal movement: keep the active marks cell after frozen S.No + Student columns.
-      // Horizontal auto-scroll disabled for mobile marks entry
-
-      // Vertical movement: scroll only inside the marks table, not the full page.
-      // This keeps the progress bar and header in the same stable position.
-      if (isMobileView()) {
-        const headerSpace = 58;
-        const bottomSpace = 108;
-        const topInside = cellRect.top - wrapRect.top;
-        const bottomInside = cellRect.bottom - wrapRect.top;
-
-        if (topInside < headerSpace) {
-          wrap.scrollTop = Math.max(0, wrap.scrollTop - (headerSpace - topInside) - 6);
-        } else if (bottomInside > wrap.clientHeight - bottomSpace) {
-          wrap.scrollTop = wrap.scrollTop + (bottomInside - (wrap.clientHeight - bottomSpace)) + 8;
+      // Scroll inside the marks grid, not the entire document. Keeping the
+      // heading at top:0 in this scroll area prevents overlap with progress.
+      if (cellRect.top < topLimit) {
+        wrap.scrollTop = Math.max(0, wrap.scrollTop - (topLimit - cellRect.top));
+      } else if (cellRect.bottom > bottomLimit) {
+        wrap.scrollTop += (cellRect.bottom - bottomLimit);
+      }
+      // Fully expose the active cell to the right of the frozen student columns.
+      // This was missing in V88.2.9 and broke Mid 1/next row focus.
+      if (!cell.classList.contains('sticky-col') && !cell.classList.contains('sticky-name')) {
+        if (cellRect.left < leftLimit) {
+          wrap.scrollLeft = Math.max(0, wrap.scrollLeft - (leftLimit - cellRect.left));
+        } else if (cellRect.right > rightLimit) {
+          wrap.scrollLeft += cellRect.right - rightLimit;
         }
       }
+      if (isMobileView()) updateEntryActiveLabel(control);
     }
 
     function smoothScrollElementIntoView(target) {
       if (!target) return;
-
-      const wrap = target.closest('.marks-wrap');
-      if (wrap && isMobileView()) {
+      if (target.closest && target.closest('.marks-wrap')) {
         keepMarksHeaderStableForControl(target);
         return;
       }
-
-      if (wrap) {
-        const wrapRect = wrap.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        const stickyOffset = isMobileView() ? 150 : 276;
-        const targetLeft = wrap.scrollLeft + (targetRect.left - wrapRect.left) - stickyOffset;
-
-        wrap.scrollTo({
-          left: Math.max(0, targetLeft),
-          behavior: 'smooth'
-        });
-      }
-
-      target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      if (target.scrollIntoView) target.scrollIntoView({ behavior:'smooth', block:'nearest', inline:'nearest' });
     }
 
     function showPracticalResultThenNextRow(input, rowIndex) {
@@ -1902,59 +2278,28 @@
 
     function smoothFocusControl(control) {
       if (!control) return;
-
       document.querySelectorAll('.awaiting-manual-select').forEach(item => {
         item.classList.remove('awaiting-manual-select');
       });
-
-      const wrap = control.closest('.marks-wrap');
-      const field = control.dataset ? control.dataset.field : '';
-
-      if (wrap) {
-        if (isMobileView()) {
-          if (field === 'mid1') {
-            wrap.scrollLeft = 0;
-          } else {
-            keepMarksHeaderStableForControl(control);
-          }
-        } else {
-          const wrapRect = wrap.getBoundingClientRect();
-          const cell = control.closest('td,th');
-          const cellRect = cell ? cell.getBoundingClientRect() : control.getBoundingClientRect();
-          const stickyOffset = 276;
-          const targetLeft = wrap.scrollLeft + (cellRect.left - wrapRect.left) - stickyOffset;
-          wrap.scrollTo({
-            left: Math.max(0, targetLeft),
-            behavior: 'smooth'
-          });
-          control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
-        }
-      } else {
-        control.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+      if (isMobileView() && mobileEntryActive) updateMobileEntryViewport();
+      const wrap = control.closest ? control.closest('.marks-wrap') : null;
+      if (wrap) keepMarksHeaderStableForControl(control);
+      // User manually opens the native mobile grade picker.
+      if (control.tagName === 'SELECT' && isMobileView()) {
+        control.classList.add('awaiting-manual-select');
+        updateEntryActiveLabel(control);
+        return;
       }
-
-      setTimeout(() => {
-        if (control.tagName === 'SELECT' && isMobileView()) {
-          // Do not open mobile dropdown automatically. Keep header/progress stable and highlight it.
+      window.setTimeout(() => {
+        if (!control.isConnected) return;
+        try { control.focus({preventScroll:true}); }
+        catch (err) { control.focus(); }
+        if (wrap) {
           keepMarksHeaderStableForControl(control);
-          control.classList.add('awaiting-manual-select');
-          return;
+          window.setTimeout(() => keepMarksHeaderStableForControl(control), 130);
+          if (isMobileView()) window.setTimeout(() => keepMarksHeaderStableForControl(control), 350);
         }
-
-        control.focus({ preventScroll: true });
-
-        if (isMobileView()) {
-          keepMarksHeaderStableForControl(control);
-          setTimeout(() => keepMarksHeaderStableForControl(control), 120);
-          setTimeout(() => keepMarksHeaderStableForControl(control), 360);
-        }
-
-        // V65 safety: if the target is Mid-1 on mobile, keep the horizontal
-        // position at the first marks area even after focus/keyboard changes.
-        if (wrap && isMobileView() && field === 'mid1') {
-          setTimeout(() => wrap.scrollTo({ left: 0, behavior: 'smooth' }), 80);
-        }
-      }, isMobileView() ? 160 : 80);
+      }, isMobileView() ? 90 : 45);
     }
 
     function showTableSuccessMessage(message, type = 'success') {
@@ -2036,6 +2381,7 @@
     }
 
     function resetMarksFormAfterFinalSubmit() {
+      closeMobileEntryMode();
       state.students = [];
       state.existingMarks = {};
       state.courseSettings = null;
@@ -2138,6 +2484,7 @@
     }
 
     async function resetPaperSelection() {
+      closeMobileEntryMode();
       state.students = [];
       state.existingMarks = {};
       state.courseSettings = null;
@@ -2228,9 +2575,9 @@
       }, 180);
 
       setTimeout(() => {
-        if (firstInput) {
-          firstInput.focus({ preventScroll: true });
-        }
+        // Do not open Android's keyboard automatically before the entry workspace
+        // is activated. The faculty can tap a cell to enter in stable full-screen mode.
+        if (firstInput && !mobileEntryActive) firstInput.classList.add('entry-ready');
       }, 950);
     }
 
@@ -2618,7 +2965,9 @@
 
       document.querySelectorAll('.mark-input').forEach(input => {
         input.addEventListener('focus', () => {
+          input.classList.remove('entry-ready');
           state.activeInput = input;
+          updateEntryActiveLabel(input);
           keepMarksHeaderStableForControl(input);
           setTimeout(() => keepMarksHeaderStableForControl(input), 220);
         });
@@ -2635,10 +2984,12 @@
       });
 
       document.querySelectorAll('.grade-select').forEach(select => {
+        select.addEventListener('focus', () => keepMarksHeaderStableForControl(select));
         select.addEventListener('change', () => handleGradeChange(select));
       });
 
       document.querySelectorAll('.remark-input').forEach(input => {
+        input.addEventListener('focus', () => keepMarksHeaderStableForControl(input));
         input.addEventListener('input', clearSaveErrorOnEntry);
       });
 
@@ -3118,6 +3469,7 @@
 
     async function init() {
       wireFilters();
+      wireMobileEntryEvents();
       updateStickyProgressTop();
       window.addEventListener('resize', updateStickyProgressTop);
       window.addEventListener('orientationchange', () => setTimeout(updateStickyProgressTop, 250));
@@ -3130,6 +3482,8 @@
       }
     }
 
+    window.openMobileEntryMode = openMobileEntryMode;
+    window.closeMobileEntryMode = closeMobileEntryMode;
     window.loadStudents = loadStudents;
     window.saveInternal = saveInternal;
     window.finalSubmit = finalSubmit;
