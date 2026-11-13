@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>CIE Mobile-First Portal V88.2.11 - Stable Mobile Marks Workspace</title>
+  <title>CIE Mobile-First Portal V88.2.12 - Odd Even Semester Type</title>
   <meta name="theme-color" content="#123c7c" />
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <script>
     (function () {
-      var APP_VERSION_QUERY = "88211";
+      var APP_VERSION_QUERY = "88212";
       try {
         var search = window.location.search || "";
         if (search.indexOf("v=" + APP_VERSION_QUERY) === -1 && search.indexOf("nofresh=1") === -1) {
@@ -1409,8 +1409,9 @@
           </div>
 
           <div class="form-grid">
-            <div class="field"><label>Academic Year</label><select id="academicYear"></select></div>
-            <div class="field"><label>Semester</label><select id="semester"></select></div>
+            <div class="field"><label for="academicYear">Academic Year</label><select id="academicYear"></select></div>
+            <div class="field"><label for="semesterType">Semester Type</label><select id="semesterType" disabled><option value="">Select</option><option value="Odd">Odd</option><option value="Even">Even</option></select></div>
+            <div class="field"><label for="semester">Semester</label><select id="semester" disabled><option value="">Select</option></select></div>
             <div class="field"><label>Course Name</label><select id="programName"></select></div>
             <div class="field"><label>Subject</label><select id="subjectName"></select></div>
             <div class="field"><label>Name of the Paper</label><select id="paperCourseName"></select></div>
@@ -1501,8 +1502,9 @@
           </div>
 
           <div class="form-grid">
-            <div class="field"><label>Academic Year</label><select id="reportAcademicYear"></select></div>
-            <div class="field"><label>Semester</label><select id="reportSemester"></select></div>
+            <div class="field"><label for="reportAcademicYear">Academic Year</label><select id="reportAcademicYear"></select></div>
+            <div class="field"><label for="reportSemesterType">Semester Type</label><select id="reportSemesterType" disabled><option value="">Select</option><option value="Odd">Odd</option><option value="Even">Even</option></select></div>
+            <div class="field"><label for="reportSemester">Semester</label><select id="reportSemester" disabled><option value="">Select</option></select></div>
             <div class="field"><label>Course Name</label><select id="reportProgramName"></select></div>
             <div class="field"><label>Subject</label><select id="reportSubjectName"></select></div>
             <div class="field"><label>Name of the Paper</label><select id="reportPaperCourseName"></select></div>
@@ -1536,8 +1538,9 @@
           <div class="dashboard-filter-box">
             <div class="hint">Default view shows all papers. Use filters only when required.</div>
             <div class="form-grid dashboard-filters">
-              <div class="field"><label>Academic Year</label><select id="dashAcademicYear"></select></div>
-              <div class="field"><label>Semester</label><select id="dashSemester"></select></div>
+              <div class="field"><label for="dashAcademicYear">Academic Year</label><select id="dashAcademicYear"></select></div>
+              <div class="field"><label for="dashSemesterType">Semester Type</label><select id="dashSemesterType"><option value="">All</option><option value="Odd">Odd</option><option value="Even">Even</option></select></div>
+              <div class="field"><label for="dashSemester">Semester</label><select id="dashSemester"></select></div>
               <div class="field"><label>Course Name</label><select id="dashProgramName"></select></div>
               <div class="field"><label>Subject</label><select id="dashSubjectName"></select></div>
               <div class="field"><label>Status</label><select id="dashStatus"></select></div>
@@ -1579,7 +1582,7 @@
 
   <script>
     const API_BASE = "https://script.google.com/macros/s/AKfycbwKSjV6K7wTSqcY1VCnE1szl1PDc9OFHb4fxgwkCTpIp-Ycovmg56qVLXjiNk9T6T0G/exec";
-    const APP_VERSION = "V88.2.11-STABLE-MOBILE-MARKS-WORKSPACE";
+    const APP_VERSION = "V88.2.12-ODD-EVEN-SEMESTER-TYPE";
 
     (function stabilizeAndroidChrome() {
       // Android Chrome normal mode can keep old GitHub Pages HTML/site data.
@@ -1645,11 +1648,13 @@
       existingMarks: {},
       activeInput: null,
       isFinalLocked: false,
-      dashboardRows: []
+      dashboardRows: [],
+      filterRequestSerial: { marks: 0, reports: 0 }
     };
 
     const el = {
       academicYear: document.getElementById('academicYear'),
+      semesterType: document.getElementById('semesterType'),
       semester: document.getElementById('semester'),
       programName: document.getElementById('programName'),
       subjectName: document.getElementById('subjectName'),
@@ -1675,12 +1680,14 @@
       resetSelectionBtn: document.getElementById('resetSelectionBtn'),
       resetSelectionBottomBtn: document.getElementById('resetSelectionBottomBtn'),
       reportAcademicYear: document.getElementById('reportAcademicYear'),
+      reportSemesterType: document.getElementById('reportSemesterType'),
       reportSemester: document.getElementById('reportSemester'),
       reportProgramName: document.getElementById('reportProgramName'),
       reportSubjectName: document.getElementById('reportSubjectName'),
       reportPaperCourseName: document.getElementById('reportPaperCourseName'),
       reportNotice: document.getElementById('reportNotice'),
       dashAcademicYear: document.getElementById('dashAcademicYear'),
+      dashSemesterType: document.getElementById('dashSemesterType'),
       dashSemester: document.getElementById('dashSemester'),
       dashProgramName: document.getElementById('dashProgramName'),
       dashSubjectName: document.getElementById('dashSubjectName'),
@@ -2388,7 +2395,7 @@
       state.activeInput = null;
       state.isFinalLocked = false;
 
-      [el.academicYear, el.semester, el.programName, el.subjectName, el.paperCourseName].forEach(select => {
+      [el.academicYear, el.semesterType, el.semester, el.programName, el.subjectName, el.paperCourseName].forEach(select => {
         if (select) select.value = '';
       });
 
@@ -2492,7 +2499,7 @@
       state.isFinalLocked = false;
       state.papers = [];
 
-      [el.academicYear, el.semester, el.programName, el.subjectName, el.paperCourseName].forEach(select => {
+      [el.academicYear, el.semesterType, el.semester, el.programName, el.subjectName, el.paperCourseName].forEach(select => {
         if (select) {
           select.disabled = false;
           select.value = '';
@@ -2521,7 +2528,7 @@
         finalBtn.textContent = 'Final Submit';
       }
 
-      showNotice(el.marksNotice, 'info', 'Selection reset. Please select Academic Year, Semester, Course, Subject and Paper again.');
+      showNotice(el.marksNotice, 'info', 'Selection reset. Please select Academic Year, Semester Type, Semester, Course, Subject and Paper again.');
 
       try {
         await loadFilters('marks');
@@ -2709,8 +2716,34 @@
       select.disabled = false;
     }
 
+    // V88.2.12: UI-only semester grouping. Backend continues receiving the exact
+    // Semester value from Master_Courses; no schema or Apps Script changes needed.
+    function cieSemesterNumber(value) {
+      const key = String(value == null ? '' : value).trim().toUpperCase()
+        .replace(/^SEM(?:ESTER)?[\s.:-]*/, '')
+        .replace(/[\s.:-]/g, '');
+      const roman = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 };
+      if (Object.prototype.hasOwnProperty.call(roman, key)) return roman[key];
+      return /^[1-6]$/.test(key) ? Number(key) : 0;
+    }
+
+    function cieSemesterMatchesType(value, type) {
+      const num = cieSemesterNumber(value);
+      if (!num || !type) return false;
+      return type === 'Odd' ? num % 2 === 1 : num % 2 === 0;
+    }
+
+    function cieSemestersForType(semesters, type) {
+      return (semesters || []).filter(semester => cieSemesterMatchesType(semester, type))
+        .sort((a, b) => cieSemesterNumber(a) - cieSemesterNumber(b));
+    }
+
     function clearLowerParams(params, changedField) {
       if (changedField === 'academicYear') {
+        params.semester = '';
+        params.programName = '';
+        params.subjectName = '';
+      } else if (changedField === 'semesterType') {
         params.semester = '';
         params.programName = '';
         params.subjectName = '';
@@ -2724,7 +2757,7 @@
     }
 
     function showDropdownLoading(selects, changedField) {
-      const order = ['academicYear', 'semester', 'programName', 'subjectName', 'paperCourseName'];
+      const order = ['academicYear', 'semesterType', 'semester', 'programName', 'subjectName', 'paperCourseName'];
       const start = changedField ? order.indexOf(changedField) + 1 : 0;
 
       order.forEach((field, index) => {
@@ -2758,18 +2791,22 @@
       const isReport = target === 'reports';
       const selects = isReport ? {
         academicYear: el.reportAcademicYear,
+        semesterType: el.reportSemesterType,
         semester: el.reportSemester,
         programName: el.reportProgramName,
         subjectName: el.reportSubjectName,
         paperCourseName: el.reportPaperCourseName
       } : {
         academicYear: el.academicYear,
+        semesterType: el.semesterType,
         semester: el.semester,
         programName: el.programName,
         subjectName: el.subjectName,
         paperCourseName: el.paperCourseName
       };
 
+      const requestId = ++state.filterRequestSerial[target];
+      const chosenSemesterType = changedField === 'academicYear' ? '' : (selects.semesterType.value || '');
       const params = clearLowerParams({
         academicYear: selects.academicYear.value,
         semester: selects.semester.value,
@@ -2782,6 +2819,12 @@
       // V82: when a higher dropdown is changed, immediately clear lower dropdown values
       // so old Course/Subject/Paper choices do not appear locked.
       if (changedField === 'academicYear') {
+        selects.semesterType.value = '';
+        selects.semester.value = '';
+        selects.programName.value = '';
+        selects.subjectName.value = '';
+        selects.paperCourseName.value = '';
+      } else if (changedField === 'semesterType') {
         selects.semester.value = '';
         selects.programName.value = '';
         selects.subjectName.value = '';
@@ -2813,17 +2856,21 @@
       try {
         data = await jsonp('getFilters', params);
       } catch (err) {
+        if (requestId !== state.filterRequestSerial[target]) return;
         enableDropdowns(selects);
         throw err;
       }
 
+      if (requestId !== state.filterRequestSerial[target]) return;
       if (!data.success) {
         enableDropdowns(selects);
         throw new Error(data.message || 'Could not load filters');
       }
 
       setOptions(selects.academicYear, data.academicYears, params.academicYear);
-      setOptions(selects.semester, data.semesters, params.semester);
+      setOptions(selects.semesterType, ['Odd', 'Even'], chosenSemesterType);
+      const possibleSemesters = cieSemestersForType(data.semesters, chosenSemesterType);
+      setOptions(selects.semester, possibleSemesters, params.semester);
       setOptions(selects.programName, data.programs, params.programName);
       setOptions(selects.subjectName, data.subjectNames, params.subjectName);
 
@@ -2837,6 +2884,13 @@
       }
 
       enableDropdowns(selects);
+      // Required sequence: Academic Year -> Semester Type -> Semester -> Course.
+      selects.semesterType.disabled = !selects.academicYear.value;
+      selects.semester.disabled = !selects.academicYear.value || !chosenSemesterType || !possibleSemesters.length;
+      const readyForPaper = !!selects.semester.value;
+      selects.programName.disabled = !readyForPaper;
+      selects.subjectName.disabled = !readyForPaper;
+      selects.paperCourseName.disabled = !readyForPaper;
     }
 
     function applySelectedPaperDefaults() {
@@ -2867,8 +2921,8 @@
         setBusy(btn, true, 'Loading...');
         showNotice(el.marksNotice, 'info', 'Loading students from backend...');
 
-        if (!el.academicYear.value || !el.semester.value || !el.programName.value || !el.subjectName.value || !el.paperCourseName.value) {
-          throw new Error('Please select Academic Year, Semester, Course Name, Subject, and Name of the Paper.');
+        if (!el.academicYear.value || !el.semesterType.value || !el.semester.value || !el.programName.value || !el.subjectName.value || !el.paperCourseName.value) {
+          throw new Error('Please select Academic Year, Semester Type, Semester, Course Name, Subject, and Name of the Paper.');
         }
         if (!el.facultyName.value.trim()) throw new Error('Please enter Name of the Faculty before loading students.');
 
@@ -3220,7 +3274,7 @@
     async function downloadReport() {
       try {
         const p = selectedReportPaper();
-        if (!el.reportAcademicYear.value || !el.reportSemester.value || !el.reportProgramName.value || !el.reportSubjectName.value || !el.reportPaperCourseName.value) {
+        if (!el.reportAcademicYear.value || !el.reportSemesterType.value || !el.reportSemester.value || !el.reportProgramName.value || !el.reportSubjectName.value || !el.reportPaperCourseName.value) {
           throw new Error('Please select all report fields.');
         }
         const btn = document.getElementById('downloadBtn');
@@ -3237,7 +3291,10 @@
         if (!result.success) throw new Error(result.message || 'PDF export failed');
         showNotice(el.reportNotice, 'success', `PDF generated successfully. <a class="btn primary" href="${escapeAttr(result.fileUrl)}" target="_blank" rel="noopener">Open PDF</a>`);
         el.reportAcademicYear.value = '';
+        el.reportSemesterType.value = '';
+        el.reportSemesterType.disabled = true;
         el.reportSemester.value = '';
+        el.reportSemester.disabled = true;
         el.reportProgramName.value = '';
         el.reportSubjectName.value = '';
         el.reportPaperCourseName.value = '';
@@ -3284,6 +3341,7 @@
 
     function dashboardFilteredRows(level = 'all') {
       const academicYear = el.dashAcademicYear ? el.dashAcademicYear.value : '';
+      const semesterType = el.dashSemesterType ? el.dashSemesterType.value : '';
       const semester = el.dashSemester ? el.dashSemester.value : '';
       const programName = el.dashProgramName ? el.dashProgramName.value : '';
       const subjectName = el.dashSubjectName ? el.dashSubjectName.value : '';
@@ -3292,6 +3350,8 @@
       return (state.dashboardRows || []).filter(row => {
         if (academicYear && !sameDashValue(row.academicYear, academicYear)) return false;
         if (level === 'academicYear') return true;
+        if (semesterType && !cieSemesterMatchesType(row.semester, semesterType)) return false;
+        if (level === 'semesterType') return true;
         if (semester && !sameDashValue(row.semester, semester)) return false;
         if (level === 'semester') return true;
         if (programName && !sameDashValue(row.programName, programName)) return false;
@@ -3307,6 +3367,11 @@
       if (!state.dashboardRows.length) return;
 
       if (changedField === 'academicYear') {
+        if (el.dashSemesterType) el.dashSemesterType.value = '';
+        if (el.dashSemester) el.dashSemester.value = '';
+        if (el.dashProgramName) el.dashProgramName.value = '';
+        if (el.dashSubjectName) el.dashSubjectName.value = '';
+      } else if (changedField === 'semesterType') {
         if (el.dashSemester) el.dashSemester.value = '';
         if (el.dashProgramName) el.dashProgramName.value = '';
         if (el.dashSubjectName) el.dashSubjectName.value = '';
@@ -3318,7 +3383,8 @@
       }
 
       setDashboardOptions(el.dashAcademicYear, dashOptionValues(state.dashboardRows, 'academicYear'));
-      setDashboardOptions(el.dashSemester, dashOptionValues(dashboardFilteredRows('academicYear'), 'semester'));
+      setDashboardOptions(el.dashSemesterType, ['Odd', 'Even']);
+      setDashboardOptions(el.dashSemester, dashOptionValues(dashboardFilteredRows('semesterType'), 'semester'));
       setDashboardOptions(el.dashProgramName, dashOptionValues(dashboardFilteredRows('semester'), 'programName'));
       setDashboardOptions(el.dashSubjectName, dashOptionValues(dashboardFilteredRows('programName'), 'subjectName'));
       setDashboardOptions(el.dashStatus, dashOptionValues(dashboardFilteredRows('subjectName'), 'status'));
@@ -3367,7 +3433,7 @@
     }
 
     function resetDashboardFilters() {
-      [el.dashAcademicYear, el.dashSemester, el.dashProgramName, el.dashSubjectName, el.dashStatus].forEach(select => {
+      [el.dashAcademicYear, el.dashSemesterType, el.dashSemester, el.dashProgramName, el.dashSubjectName, el.dashStatus].forEach(select => {
         if (select) select.value = '';
       });
       refreshDashboardFilterOptions();
@@ -3414,6 +3480,7 @@
     function wireFilters() {
       [
         [el.academicYear, 'academicYear'],
+        [el.semesterType, 'semesterType'],
         [el.semester, 'semester'],
         [el.programName, 'programName'],
         [el.subjectName, 'subjectName']
@@ -3430,6 +3497,7 @@
 
       [
         [el.reportAcademicYear, 'academicYear'],
+        [el.reportSemesterType, 'semesterType'],
         [el.reportSemester, 'semester'],
         [el.reportProgramName, 'programName'],
         [el.reportSubjectName, 'subjectName']
@@ -3441,6 +3509,7 @@
 
       [
         [el.dashAcademicYear, 'academicYear'],
+        [el.dashSemesterType, 'semesterType'],
         [el.dashSemester, 'semester'],
         [el.dashProgramName, 'programName'],
         [el.dashSubjectName, 'subjectName'],
